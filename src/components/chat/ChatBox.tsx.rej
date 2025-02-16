@@ -1,0 +1,5 @@
+--- src/components/chat/ChatBox.tsx
++++ src/components/chat/ChatBox.tsx
+@@ -22 +22 @@
+-  payload?: any;
++  payload?: unknown;

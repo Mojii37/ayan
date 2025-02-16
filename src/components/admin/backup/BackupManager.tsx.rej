@@ -1,0 +1,5 @@
+--- src/components/admin/backup/BackupManager.tsx
++++ src/components/admin/backup/BackupManager.tsx
+@@ -53 +53 @@
+-const statusColors: Record<BackupStatus,any> = {
++const statusColors: Record<BackupStatus,unknown> = {

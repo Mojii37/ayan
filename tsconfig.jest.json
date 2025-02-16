@@ -1,0 +1,8 @@
+{
+    "extends": "./tsconfig.json", // Or your base tsconfig
+    "compilerOptions": {
+      "module": "commonjs",
+      "allowJs": true,
+    },
+    "include": ["jest.config.ts"]
+  }

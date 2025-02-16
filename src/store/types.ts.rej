@@ -1,0 +1,5 @@
+--- src/store/types.ts
++++ src/store/types.ts
+@@ -23 +23 @@
+-    data: any;
++    data: unknown;
