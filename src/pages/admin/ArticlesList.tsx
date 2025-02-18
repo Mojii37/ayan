@@ -1,4 +1,3 @@
-// src/pages/admin/ArticlesList.tsx
 import React from 'react';
 import { ContentList } from '../../components/admin/content/ContentList';
 import { Article } from '../../types/content';

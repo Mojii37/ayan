@@ -1,5 +1,6 @@
-import { Middleware, AnyAction, Dispatch } from 'redux';
-import type { RootState } from '../store';
+// src/store/middleware/apiMiddleware.ts
+import { Middleware, MiddlewareAPI, Dispatch, AnyAction } from '@reduxjs/toolkit';
+import { RootState } from '../';
 
 export interface ApiAction extends AnyAction {
   type: string;
@@ -12,17 +13,15 @@ export interface ApiAction extends AnyAction {
   };
 }
 
-const isApiAction = (action: AnyAction): action is ApiAction => {
-  return action.type.startsWith('api/');
-};
-
-const apiMiddleware: Middleware<Dispatch, RootState> = 
-  store => next => action => {
+const apiMiddleware: Middleware<{}, RootState> = 
+  (api: MiddlewareAPI<Dispatch<AnyAction>, RootState>) => 
+  (next: Dispatch<AnyAction>) => 
+  (action: ApiAction) => {
     const result = next(action);
 
-    if (isApiAction(action)) {
+    if (action.type.startsWith('api/')) {
       try {
-        const state = store.getState();
+        const state = api.getState();
         const token = state.auth?.token;
 
         if (token) {
@@ -30,19 +29,19 @@ const apiMiddleware: Middleware<Dispatch, RootState> =
             ...action.payload,
             headers: {
               'Content-Type': 'application/json',
-              Accept: 'application/json',
+              'Accept': 'application/json',
               ...action.payload?.headers,
-              Authorization: `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`,
             },
           };
 
-          (next as Dispatch<ApiAction>)({
+          next({
             ...action,
             payload: updatedPayload
           });
         }
       } catch (error) {
-        console.error('API Middleware Error:', error);
+        console.error('خطای میانی‌افزار API:', error);
       }
     }
 

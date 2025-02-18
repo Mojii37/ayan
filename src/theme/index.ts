@@ -1,17 +1,35 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, Theme } from '@mui/material/styles';
 import { faIR } from '@mui/material/locale';
 import createCache from '@emotion/cache';
 import rtlPlugin from 'stylis-plugin-rtl';
-import { prefixer } from 'stylis';
 
 // تنظیمات RTL
 export const cacheRtl = createCache({
   key: 'muirtl',
-  stylisPlugins: [prefixer, rtlPlugin],
+  stylisPlugins: [rtlPlugin],
+  prepend: true,
 });
 
+// تعریف تایپ برای پالت رنگ‌ها
+interface DarkGoldPalette {
+  gold: {
+    main: string;
+    light: string;
+    dark: string;
+    contrastText: string;
+  };
+  background: {
+    default: string;
+    paper: string;
+  };
+  text: {
+    primary: string;
+    secondary: string;
+  };
+}
+
 // پالت رنگ‌های مشکی و طلایی
-const darkGold = {
+const darkGold: DarkGoldPalette = {
   gold: {
     main: '#FFD700',
     light: '#FFE144',
@@ -28,7 +46,7 @@ const darkGold = {
   },
 };
 
-const theme = createTheme({
+export const theme: Theme = createTheme({
   direction: 'rtl',
   typography: {
     fontFamily: 'IRANSans, Vazirmatn, Arial, sans-serif',
@@ -39,6 +57,15 @@ const theme = createTheme({
       color: darkGold.gold.main,
     },
     h3: {
+      color: darkGold.gold.main,
+    },
+    h4: {
+      color: darkGold.gold.main,
+    },
+    h5: {
+      color: darkGold.gold.main,
+    },
+    h6: {
       color: darkGold.gold.main,
     },
   },
@@ -58,12 +85,14 @@ const theme = createTheme({
     },
     background: darkGold.background,
     text: darkGold.text,
+    gold: darkGold.gold,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
           fontWeight: 'bold',
+          borderRadius: 8,
           '&:hover': {
             backgroundColor: darkGold.gold.dark,
           },
@@ -71,10 +100,17 @@ const theme = createTheme({
         contained: {
           backgroundColor: darkGold.gold.main,
           color: darkGold.gold.contrastText,
+          '&:hover': {
+            backgroundColor: darkGold.gold.dark,
+          },
         },
         outlined: {
           borderColor: darkGold.gold.main,
           color: darkGold.gold.main,
+          '&:hover': {
+            borderColor: darkGold.gold.light,
+            backgroundColor: 'rgba(255, 215, 0, 0.04)',
+          },
         },
       },
     },
@@ -113,10 +149,39 @@ const theme = createTheme({
               borderColor: darkGold.gold.light,
             },
           },
+          '& .MuiInputLabel-root': {
+            color: darkGold.text.secondary,
+            '&.Mui-focused': {
+              color: darkGold.gold.main,
+            },
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: darkGold.background.paper,
+          backgroundImage: 'none',
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: darkGold.gold.dark,
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: darkGold.gold.main,
+          '&:hover': {
+            backgroundColor: 'rgba(255, 215, 0, 0.04)',
+          },
         },
       },
     },
   },
 }, faIR);
-
-export default theme;

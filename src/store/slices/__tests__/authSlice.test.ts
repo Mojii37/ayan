@@ -1,4 +1,5 @@
 import authReducer, { setCredentials, logout } from '../authSlice';
+import { User } from '../../../types/user';
 
 describe('authSlice', () => {
   const initialState = {
@@ -12,7 +13,10 @@ describe('authSlice', () => {
   });
 
   it('should handle setCredentials', () => {
-    const user = { id: 1, name: 'Test User' };
+    const user: User = { 
+      id: 1, 
+      name: 'Test User' 
+    };
     const actual = authReducer(
       initialState,
       setCredentials({ user, token: 'token' })
@@ -23,8 +27,12 @@ describe('authSlice', () => {
   });
 
   it('should handle logout', () => {
+    const user: User = { 
+      id: 1, 
+      name: 'Test User' 
+    };
     const actual = authReducer(
-      { isAuthenticated: true, user: { id: 1, name: 'Test User' }, token: 'token' }, 
+      { isAuthenticated: true, user, token: 'token' }, 
       logout()
     );
     expect(actual).toEqual(initialState);

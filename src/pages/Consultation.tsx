@@ -1,5 +1,3 @@
-// src/pages/Consultation.tsx
-import React, { useState } from 'react';
 import {
   Container,
   Paper,
@@ -11,6 +9,7 @@ import {
   Step,
   StepLabel,
 } from '@mui/material';
+import { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { StyledTextField, SelectField } from '../components/common/FormFields';

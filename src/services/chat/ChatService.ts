@@ -57,8 +57,8 @@ export class ChatService {
     context: Record<string, unknown>
   ): Omit<ErrorLog, 'id' | 'timestamp'> {
     return {
-      severity: 'error' as ErrorSeverity,
-      source: 'client' as ErrorSource,
+      severity: ErrorSeverity.Error,
+      source: ErrorSource.Client,
       message: error.message,
       stack: error.stack,
       context: {
@@ -75,38 +75,43 @@ export class ChatService {
 
   static async sendMessage(message: string): Promise<ChatResponse> {
     try {
-      // در نسخه production از API استفاده می‌شود
       if (process.env.NODE_ENV === 'production') {
+        // استفاده از API واقعی
         const response = await axios.post<ChatResponse>(this.API_URL, { message });
         return response.data;
-      }
-
-      // پیاده‌سازی mock برای محیط development
-      if (this.matchesKeywords(message, this.TAX_KEYWORDS)) {
-        return {
-          text: 'آیا مایل به محاسبه مالیات هستید؟',
-          suggestions: ['بله، محاسبه کن', 'خیر، سوال دیگری دارم'],
-          action: {
-            type: 'CALCULATE_TAX'
+      } else {
+        // پیاده‌سازی mock
+        const mockResponses: Record<string, ChatResponse> = {
+          tax: {
+            text: 'آیا مایل به محاسبه مالیات هستید؟',
+            suggestions: ['بله، محاسبه کن', 'خیر، سوال دیگری دارم'],
+            action: {
+              type: 'CALCULATE_TAX'
+            },
+          },
+          consultation: {
+            text: 'آیا می‌خواهید وقت مشاوره رزرو کنید؟',
+            suggestions: ['بله، رزرو کن', 'اطلاعات بیشتر'],
+            action: {
+              type: 'BOOK_CONSULTATION'
+            },
+          },
+          default: {
+            text: 'چطور می‌توانم کمکتان کنم؟',
+            suggestions: ['محاسبه مالیات', 'رزرو مشاوره', 'سوالات متداول'],
           },
         };
+
+        if (this.matchesKeywords(message, this.TAX_KEYWORDS)) {
+          return mockResponses.tax;
+        }
+
+        if (this.matchesKeywords(message, this.CONSULTATION_KEYWORDS)) {
+          return mockResponses.consultation;
+        }
+
+        return mockResponses.default;
       }
-
-      if (this.matchesKeywords(message, this.CONSULTATION_KEYWORDS)) {
-        return {
-          text: 'آیا می‌خواهید وقت مشاوره رزرو کنید؟',
-          suggestions: ['بله، رزرو کن', 'اطلاعات بیشتر'],
-          action: {
-            type: 'BOOK_CONSULTATION'
-          },
-        };
-      }
-
-      return {
-        text: 'چطور می‌توانم کمکتان کنم؟',
-        suggestions: ['محاسبه مالیات', 'رزرو مشاوره', 'سوالات متداول'],
-      };
-
     } catch (error) {
       const chatError = new ChatServiceError(
         'خطا در سرویس چت',
@@ -130,7 +135,7 @@ export const isChatResponse = (response: unknown): response is ChatResponse => {
   return (
     typeof response === 'object' &&
     response !== null &&
-    'text' in response &&
+    response.hasOwnProperty('text') &&
     typeof (response as ChatResponse).text === 'string'
   );
 };

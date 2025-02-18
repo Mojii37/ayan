@@ -1,31 +1,50 @@
 import React from 'react';
-import { configureStore } from '@reduxjs/toolkit';
 import { render } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+
+// Import your reducers
 import authReducer from './store/slices/authSlice';
 import uiReducer from './store/slices/uiSlice';
-import { Provider } from 'react-redux';
 
+// Root reducer
 const rootReducer = {
   auth: authReducer,
   ui: uiReducer,
 };
 
-const store = configureStore({
-  reducer: rootReducer,
-});
+// Store setup function
+export const setupStore = (preloadedState = {}) => {
+  return configureStore({
+    reducer: rootReducer,
+    preloadedState,
+    middleware: (getDefaultMiddleware) => 
+      getDefaultMiddleware({
+        serializableCheck: false,
+        immutableCheck: false,
+      }),
+  });
+};
 
-interface TestWrapperProps {
-  children: React.ReactNode;
-}
+// Default store
+const store = setupStore();
 
-const AllTheProviders: React.FC<TestWrapperProps> = ({ children }) => {
+// Provider wrapper
+const TestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <Provider store={store}>{children}</Provider>;
 };
 
-const renderWithProviders = (ui: React.ReactElement) => {
-  return render(ui, { wrapper: AllTheProviders });
+// Enhanced render function
+export const renderWithProviders = (
+  ui: React.ReactElement, 
+  options = {}
+) => {
+  return render(ui, { 
+    wrapper: TestProvider, 
+    ...options 
+  });
 };
 
+// Export Testing Library utilities
 export * from '@testing-library/react';
-export { renderWithProviders as render };
-export default AllTheProviders;
+export { TestProvider };

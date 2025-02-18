@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Paper, Typography, Grid, Button, Box } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -9,7 +8,7 @@ const validationSchema = Yup.object({
     .required('Required')
     .min(2, 'Must be at least 2 characters'),
   lastName: Yup.string()
-    .required('Required')
+    .required('Required')    
     .min(2, 'Must be at least 2 characters'),
   email: Yup.string().email('Invalid email').required('Required'),
   mobile: Yup.string()
@@ -21,7 +20,7 @@ const validationSchema = Yup.object({
     .matches(/[0-9]/, 'Must contain numbers')
     .required('Required'),
   confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password')], 'Passwords must match')
+    .oneOf([Yup.ref('password')], 'Passwords must match') 
     .required('Required'),
 });
 
@@ -30,13 +29,13 @@ const RegistrationPage = () => {
     initialValues: {
       firstName: '',
       lastName: '',
-      email: '',
+      email: '', 
       mobile: '',
       password: '',
       confirmPassword: '',
     },
     validationSchema,
-    onSubmit: async values => {
+    onSubmit: async (values) => {
       try {
         // Submit the form values to the server
         console.log('Form submitted:', values);
@@ -64,26 +63,20 @@ const RegistrationPage = () => {
                   label="First Name"
                   value={formik.values.firstName}
                   onChange={formik.handleChange}
-                  error={
-                    formik.touched.firstName && Boolean(formik.errors.firstName)
-                  }
-                  helperText={
-                    formik.touched.firstName && formik.errors.firstName
-                  }
+                  error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                  helperText={formik.touched.firstName && formik.errors.firstName}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <StyledTextField
                   fullWidth
-                  name="lastName"
+                  name="lastName" 
                   label="Last Name"
                   value={formik.values.lastName}
                   onChange={formik.handleChange}
-                  error={
-                    formik.touched.lastName && Boolean(formik.errors.lastName)
-                  }
-                  helperText={formik.touched.lastName && formik.errors.lastName}
+                  error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                  helperText={formik.touched.lastName && formik.errors.lastName}  
                 />
               </Grid>
 
@@ -97,14 +90,14 @@ const RegistrationPage = () => {
                   onChange={formik.handleChange}
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
-                />
+                />  
               </Grid>
 
               <Grid item xs={12}>
-                <StyledTextField
+                <StyledTextField 
                   fullWidth
                   name="mobile"
-                  label="Mobile Number"
+                  label="Mobile"
                   value={formik.values.mobile}
                   onChange={formik.handleChange}
                   error={formik.touched.mobile && Boolean(formik.errors.mobile)}
@@ -120,42 +113,28 @@ const RegistrationPage = () => {
                   type="password"
                   value={formik.values.password}
                   onChange={formik.handleChange}
-                  error={
-                    formik.touched.password && Boolean(formik.errors.password)
-                  }
+                  error={formik.touched.password && Boolean(formik.errors.password)}
                   helperText={formik.touched.password && formik.errors.password}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <StyledTextField
+                <StyledTextField  
                   fullWidth
                   name="confirmPassword"
                   label="Confirm Password"
-                  type="password"
+                  type="password"  
                   value={formik.values.confirmPassword}
                   onChange={formik.handleChange}
-                  error={
-                    formik.touched.confirmPassword &&
-                    Boolean(formik.errors.confirmPassword)
-                  }
-                  helperText={
-                    formik.touched.confirmPassword &&
-                    formik.errors.confirmPassword
-                  }
+                  error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                  helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                 />
               </Grid>
 
               <Grid item xs={12}>
-                <Button
-                  fullWidth
-                  size="large"
-                  variant="contained"
-                  type="submit"
-                  disabled={formik.isSubmitting}
-                >
+                <Button fullWidth variant="contained" color="primary" type="submit">
                   Register
-                </Button>
+                </Button>  
               </Grid>
             </Grid>
           </form>

@@ -1,75 +1,36 @@
-// src/setupTests.ts
-import { render } from '@testing-library/react';
-import { PropsWithChildren } from 'react';
 import '@testing-library/jest-dom';
-import { vi, expect } from 'vitest';
+import { render } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
+import { renderHook } from '@testing-library/react-hooks';
+import { configureStore } from '@reduxjs/toolkit';
+import rootReducer from './slices';
 
-// Add custom matchers type definitions
-interface CustomMatchers<R = unknown> {
-  toBeInTheDocument(): R;
-}
+// تنظیمات تست
+const store = configureStore({
+  reducer: rootReducer,
+});
 
-declare module 'vitest' {
-  interface Assertion extends CustomMatchers {}
-  interface AsymmetricMatchersContaining extends CustomMatchers {}
-}
+// کامپوننتی برای رندر کردن با فراهم‌کنندگان
+export const renderWithProviders = (ui: React.ReactElement, { route = '/' } = {}) => {
+  window.history.pushState({}, 'Test page', route);
 
-// Define the renderWithProviders utility function
-export function renderWithProviders(ui: React.ReactElement, options = {}) {
-  return {
-    ...render(ui, {
-      wrapper: ({ children }: PropsWithChildren<{}>) => children,
-      ...options,
-    }),
-  };
-}
+  return render(
+    <Provider store={store}>
+      <BrowserRouter>
+        {ui}
+      </BrowserRouter>
+    </Provider>
+  );
+};
 
-// Global test setup
-beforeAll(() => {
-  // Mock window.matchMedia
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation(query => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
+// هوک برای رندر کردن با فراهم‌کنندگان
+export const renderHookWithProviders = (hook: () => unknown) => {
+  return renderHook(() => hook(), {
+    wrapper: ({ children }) => (
+      <Provider store={store}>
+        {children}
+      </Provider>
+    ),
   });
-
-  // Setup vitest as global test environment
-  Object.defineProperty(window, 'vi', {
-    writable: true,
-    value: vi
-  });
-});
-
-afterAll(() => {
-  // Cleanup test environment
-  vi.clearAllMocks();
-});
-
-// Custom matchers
-expect.extend({
-  toBeInTheDocument(received: unknown) {
-    const pass = Boolean(received);
-    if (pass) {
-      return {
-        message: () => 'expected element to be in the document',
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => 'expected element to be in the document',
-        pass: false,
-      };
-    }
-  },
-});
-
-// Re-export for use in tests
-export { expect, vi };
+};

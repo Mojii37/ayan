@@ -323,7 +323,7 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
               <Select
                 value={config.schedule?.frequency || 'daily'}
                 label="تناوب"
-                onChange={e =>
+                onChange={(e) => {
                   onUpdateConfig({
                     ...config,
                     schedule: {
@@ -331,8 +331,8 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
                       frequency: e.target.value as 'daily' | 'weekly' | 'monthly',
                       time: config.schedule?.time || '00:00',
                     },
-                  })
-                }
+                  });
+                }}
               >
                 <MenuItem value="daily">روزانه</MenuItem>
                 <MenuItem value="weekly">هفتگی</MenuItem>
@@ -348,7 +348,7 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
                 type="number"
                 label="تعداد نسخه‌ها"
                 value={config.retention.count}
-                onChange={e =>
+                onChange={(e) =>
                   onUpdateConfig({
                     ...config,
                     retention: {
@@ -362,7 +362,7 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
                 type="number"
                 label="مدت نگهداری (روز)"
                 value={config.retention.days}
-                onChange={e =>
+                onChange={(e) =>
                   onUpdateConfig({
                     ...config,
                     retention: {

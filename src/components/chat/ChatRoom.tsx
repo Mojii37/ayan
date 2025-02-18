@@ -1,15 +1,11 @@
-import React from 'react';
 import { Box, Typography, Badge } from '@mui/material';
 import type { ChatRoom as ChatRoomType } from '../../types/chat.types';
-import type { User } from '../../types/auth.types';
 
 interface ChatRoomProps {
   room: ChatRoomType;
-  currentUser: User;
 }
 
-// اضافه کردن پیشوند _ به currentUser چون استفاده نشده
-const ChatRoom: React.FC<ChatRoomProps> = ({ room, _currentUser }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ room }) => {
   const { name, lastMessage, unreadCount } = room;
 
   return (
@@ -34,15 +30,30 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ room, _currentUser }) => {
         </Badge>
       </Box>
 
-      <Typography variant="body2" color="text.secondary">
-        {lastMessage.content}
-      </Typography>
+      {lastMessage && (
+        <>
+          <Typography variant="body2" color="text.secondary">
+            {lastMessage.content}
+          </Typography>
 
-      <Typography variant="caption" color="text.secondary">
-        وضعیت: {lastMessage.status}
-      </Typography>
+          <Typography variant="caption" color="text.secondary">
+            وضعیت: {lastMessage.status}
+          </Typography>
+        </>
+      )}
     </Box>
   );
+};
+
+ChatRoom.propTypes = {
+  room: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    lastMessage: PropTypes.shape({
+      content: PropTypes.string.isRequired,
+      status: PropTypes.string.isRequired,
+    }),
+    unreadCount: PropTypes.number.isRequired,
+  }).isRequired,
 };
 
 export default ChatRoom;

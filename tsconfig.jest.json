@@ -1,8 +1,24 @@
 {
-    "extends": "./tsconfig.json", // Or your base tsconfig
-    "compilerOptions": {
-      "module": "commonjs",
-      "allowJs": true,
-    },
-    "include": ["jest.config.ts"]
-  }
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "isolatedModules": false,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "strict": true
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**/*.ts",
+    "src/**/__tests__/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
+}

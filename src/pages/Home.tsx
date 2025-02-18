@@ -1,5 +1,3 @@
-// src/pages/Home.tsx
-import React from 'react';
 import { Box, Container, Grid, Typography, Button } from '@mui/material';
 import { ImageSlider } from '../components/common/ImageSlider';
 import { styled } from '@mui/material/styles';

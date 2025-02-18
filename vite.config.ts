@@ -1,90 +1,71 @@
-import { defineConfig, loadEnv, UserConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import mdx from '@mdx-js/rollup';
 import eslintPlugin from 'vite-plugin-eslint';
 import { visualizer } from 'rollup-plugin-visualizer';
 import checker from 'vite-plugin-checker';
 import path from 'path';
+import type { ConfigEnv, UserConfig } from 'vite';
 
-// تعریف type های مورد نیاز
-interface RouterFutureFlags {
-  v7_startTransition: boolean;
-  v7_relativeSplatPath: boolean;
-}
-
-interface BuildOptions extends UserConfig {
-  statsOptions?: {
-    enabled: boolean;
-    openAnalyzer?: boolean;
-  };
-}
-
-// تنظیمات visualizer
-const configureVisualizer = (mode: string) => {
-  return visualizer({
-    filename: 'stats.html',
-    open: true,
-    gzipSize: true,
-    brotliSize: true,
-    template: 'treemap', // یا 'sunburst', 'network'
-    sourcemap: mode === 'development',
-  });
-};
-
-// تنظیمات checker
-const configureTypeChecker = () => {
-  return checker({
-    typescript: {
-      tsconfigPath: './tsconfig.json',
-      root: '.',
-      buildMode: false,
-    },
-    eslint: {
-      lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
-      dev: {
-        logLevel: ['error', 'warning'],
-      },
-    },
-    enableBuild: true,
-    overlay: {
-      initialIsOpen: false,
-      position: 'br',
-    },
-    terminal: true,
-  });
-};
-
-export default defineConfig(({ command, mode }): BuildOptions => {
+export default defineConfig((configEnv: ConfigEnv): UserConfig => {
+  const { mode } = configEnv;
+  const isDevelopment = mode === 'development';
+  const isProduction = mode === 'production';
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     plugins: [
       react({
         babel: {
           plugins: [
-            ['@babel/plugin-transform-runtime', {
-              regenerator: true,
-              corejs: 3,
+            ['@babel/plugin-transform-runtime', { 
+              regenerator: true, 
+              corejs: 3 
             }],
-            ['@emotion/babel-plugin', {
-              sourceMap: true,
-              autoLabel: 'dev-only',
+            ['@emotion/babel-plugin', { 
+              sourceMap: isDevelopment, 
+              autoLabel: isDevelopment ? 'dev-only' : 'never'
             }],
           ],
         },
       }),
-      mdx({
-        providerImportSource: '@mdx-js/react',
-      }),
+      mdx({ providerImportSource: '@mdx-js/react' }),
       eslintPlugin({
-        cache: mode === 'development',
-        fix: true,
+        cache: isDevelopment,
+        fix: isDevelopment,
         include: ['src/**/*.{ts,tsx,js,jsx}'],
         exclude: ['node_modules/**', 'dist/**'],
       }),
-      configureTypeChecker(),
-      mode === 'production' && configureVisualizer(mode),
-    ].filter(Boolean),
+      checker({
+        typescript: {
+          tsconfigPath: './tsconfig.json',
+          root: '.',
+          buildMode: isProduction,
+        },
+        eslint: {
+          lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
+          dev: { 
+            logLevel: isDevelopment ? ['error', 'warning'] : [] 
+          },
+        },
+        enableBuild: true,
+        overlay: {
+          initialIsOpen: false,
+          position: 'br',
+        },
+        terminal: true,
+      }),
+      ...(isProduction 
+        ? [visualizer({
+            filename: 'stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+            template: 'treemap',
+            sourcemap: isDevelopment,
+          })] 
+        : []),
+    ],
 
     resolve: {
       alias: {
@@ -95,17 +76,24 @@ export default defineConfig(({ command, mode }): BuildOptions => {
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
     },
 
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/jest.setup.ts'],
+      css: true,
+    },
+
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),
-      'process.env.VITE_ROUTER_FUTURE_FLAGS': JSON.stringify({
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }),
+      ...Object.keys(env).reduce((acc, key) => {
+        acc[`import.meta.env.${key}`] = JSON.stringify(env[key]);
+        return acc;
+      }, {}),
     },
 
     build: {
       target: 'es2015',
-      sourcemap: true,
+      sourcemap: isDevelopment,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -113,9 +101,6 @@ export default defineConfig(({ command, mode }): BuildOptions => {
             router: ['react-router-dom'],
           },
         },
-        plugins: [
-          mode === 'production' && configureVisualizer(mode),
-        ].filter(Boolean),
       },
     },
 

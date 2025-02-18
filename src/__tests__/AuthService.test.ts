@@ -1,8 +1,8 @@
 /// <reference types="jest" />
 
-
 describe('AuthService', () => {
   it('should render', () => {
-     expect(true).toBeTruthy();
+    const result: boolean = true;
+    expect(result).toBeTruthy();
   });
 });

@@ -1,16 +1,13 @@
-import { Theme as MuiTheme } from '@mui/material/styles';
+import '@mui/material/styles';
 
 declare module '@mui/material/styles' {
-  interface Theme extends MuiTheme {
-    // اضافه کردن پراپرتی‌های سفارشی theme در صورت نیاز
-  }
-  
-  interface ThemeOptions extends Partial<Theme> {
-    // اضافه کردن پراپرتی‌های سفارشی theme options در صورت نیاز
-  }
-
   interface Palette {
-    neutral: Palette['primary'];
+    gold: {
+      main: string;
+      light: string;
+      dark: string;
+      contrastText: string;
+    };
     customBackground: {
       default: string;
       paper: string;
@@ -20,7 +17,12 @@ declare module '@mui/material/styles' {
   }
 
   interface PaletteOptions {
-    neutral?: PaletteOptions['primary'];
+    gold?: {
+      main: string;
+      light: string;
+      dark: string;
+      contrastText: string;
+    };
     customBackground?: {
       default: string;
       paper: string;
@@ -35,7 +37,18 @@ declare module '@mui/material/styles' {
     light: string;
     dark: string;
   }
+
+  interface Theme {
+    status: {
+      danger: string;
+    };
+  }
+
+  interface ThemeOptions {
+    status?: {
+      danger?: string;
+    };
+  }
 }
 
-// این export برای رفع خطای unused variable
-export interface CustomTheme extends Theme {}
+export {};

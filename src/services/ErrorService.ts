@@ -1,67 +1,99 @@
-import { ErrorLog } from '../types/error';
+import { ErrorLog, ErrorSeverity, ErrorSource, StoredError } from '../types/error';
 
 export class ErrorService {
   private static readonly API_URL = '/api/errors';
   private static readonly MAX_RETRY_ATTEMPTS = 3;
+  private static readonly STORAGE_KEY = 'pendingErrors';
+
+  private static generateErrorId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+  }
+
+  private static getSystemInfo() {
+    return {
+      browser: navigator.userAgent,
+      os: navigator.platform,
+      deviceType: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+      route: window.location.pathname,
+    };
+  }
 
   static async logError(error: Partial<ErrorLog>): Promise<void> {
     let attempts = 0;
+    const fullError: ErrorLog = {
+      id: this.generateErrorId(),
+      timestamp: new Date(),
+      severity: error.severity || 'error',
+      source: error.source || 'client',
+      message: error.message || 'Unknown error',
+      stack: error.stack,
+      context: {
+        ...this.getSystemInfo(),
+        ...error.context,
+      },
+    };
+
     while (attempts < this.MAX_RETRY_ATTEMPTS) {
       try {
-        await fetch(this.API_URL, {
+        const response = await fetch(this.API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            ...error,
-            timestamp: new Date().toISOString(),
-          }),
+          body: JSON.stringify(fullError),
         });
-        break; 
-      } catch (e) {
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        break;
+      } catch (error) {
         attempts++;
         if (attempts === this.MAX_RETRY_ATTEMPTS) {
-          
-          this.storeErrorLocally(error);
+          await this.storeErrorLocally(fullError);
         }
-        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
       }
     }
   }
 
-  private static storeErrorLocally(error: Partial<ErrorLog>): void {
-    const storedErrors = JSON.parse(
-      localStorage.getItem('pendingErrors') || '[]'
-    );
-    storedErrors.push({ ...error, timestamp: new Date().toISOString() }); // Add timestamp to stored error
-    localStorage.setItem('pendingErrors', JSON.stringify(storedErrors));
+  private static async storeErrorLocally(error: ErrorLog): Promise<void> {
+    try {
+      const storedErrors: StoredError[] = JSON.parse(
+        localStorage.getItem(this.STORAGE_KEY) || '[]'
+      );
+
+      const storedError: StoredError = {
+        ...error,
+        timestamp: error.timestamp.toISOString(),
+      };
+
+      storedErrors.push(storedError);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(storedErrors));
+    } catch (error) {
+      console.error('Failed to store error:', error);
+    }
   }
 
   static async syncStoredErrors(): Promise<void> {
-    const storedErrors = JSON.parse(
-      localStorage.getItem('pendingErrors') || '[]'
-    );
+    const storedErrors = JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
     if (storedErrors.length === 0) return;
 
-    const successfulSyncs: number[] = [];
-    for (let i = 0; i < storedErrors.length; i++) {
+    const successfulSyncs: string[] = [];
+    for (const error of storedErrors) {
       try {
-        await this.logError(storedErrors[i]);
-        successfulSyncs.push(i); // Keep track of successfully synced errors
-      } catch (e) {
-        console.error('Error syncing stored error:', e);
+        await this.logError(error);
+        successfulSyncs.push(error.id);
+      } catch (error) {
+        console.error('Error syncing:', error);
       }
     }
 
-   
     const remainingErrors = storedErrors.filter(
-      (index,_) => !successfulSyncs.includes(index)
+      error => !successfulSyncs.includes(error.id)
     );
-    
 
-    localStorage.setItem('pendingErrors', JSON.stringify(remainingErrors));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(remainingErrors));
   }
 
   static handleGlobalErrors(): void {
@@ -80,7 +112,7 @@ export class ErrorService {
       });
     };
 
-    window.addEventListener('unhandledrejection', event => {
+    window.addEventListener('unhandledrejection', (event) => {
       this.logError({
         severity: 'error',
         source: 'client',
@@ -94,3 +126,5 @@ export class ErrorService {
     });
   }
 }
+
+export default ErrorService;

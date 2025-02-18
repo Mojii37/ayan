@@ -7,7 +7,7 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { ZarinpalService } from '../../services/payment/zarinpal';
+import { ZarinpalService } from './ZarinPal';
 
 interface PaymentFormProps {
   amount: number;
@@ -26,11 +26,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   userInfo,
 }) => {
   const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
   const handlePayment = async () => {
     setLoading(true);
-    setError(null);
+    setErrorMessage(null);
 
     try {
       const callbackUrl = `${window.location.origin}/payment/verify`;
@@ -42,11 +42,12 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         email: userInfo?.email,
       });
 
-      // ریدایرکت به درگاه پرداخت
+      // Redirect to the payment gateway
       window.location.href = response.url;
-    } catch (err) {
-      setError('خطا در اتصال به درگاه پرداخت');
-      onError('خطا در اتصال به درگاه پرداخت');
+    } catch (_error) {
+      const message = 'Error connecting to payment gateway';
+      setErrorMessage(message);
+      onError(message);
     } finally {
       setLoading(false);
     }
@@ -55,12 +56,12 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <Paper sx={{ p: 3, maxWidth: 400, mx: 'auto' }}>
       <Typography variant="h6" gutterBottom align="center">
-        اطلاعات پرداخت
+        Payment Information
       </Typography>
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="body1" gutterBottom>
-          مبلغ قابل پرداخت:
+          Amount to Pay:
         </Typography>
         <Typography variant="h5" color="primary">
           {new Intl.NumberFormat('fa-IR').format(amount)} ریال
@@ -73,9 +74,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         </Typography>
       </Box>
 
-      {error && (
+      {errorMessage && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {errorMessage}
         </Alert>
       )}
 
@@ -88,7 +89,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         {loading ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
-          'پرداخت آنلاین'
+          'Pay Online'
         )}
       </Button>
     </Paper>

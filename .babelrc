@@ -1,7 +1,21 @@
 {
-  "presets": ["@babel/preset-react", "@babel/preset-env"],
+  "presets": [
+    "@babel/preset-react",
+    ["@babel/preset-env", {
+      "targets": {
+        "browsers": [">0.2%", "not dead", "not op_mini all"]
+      },
+      "useBuiltIns": "usage",
+      "corejs": 3
+    }]
+  ],
   "plugins": [
-    "@babel/plugin-transform-runtime",
-    "decorators-legacy" // افزونه‌های نحوی دیگر
+    ["@babel/plugin-transform-runtime", {
+      "regenerator": true,
+      "corejs": 3
+    }],
+    ["@babel/plugin-proposal-decorators", {
+      "legacy": true
+    }]
   ]
 }

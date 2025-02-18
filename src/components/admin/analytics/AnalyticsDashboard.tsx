@@ -1,4 +1,5 @@
-import React, { useState, type ReactElement } from 'react';
+// src/components/admin/analytics/AnalyticsDashboard.tsx
+import React, { useState } from 'react';
 import {
   Box,
   Grid,
@@ -33,35 +34,57 @@ import {
   TrendingUp,
   Assignment,
 } from '@mui/icons-material';
-import type { AnalyticsData, TimeRange } from '../../../types/analytics';
 
-interface Props {
+// تعریف تایپ‌های اطلاعاتی
+interface AnalyticsData {
+  users: {
+    active: number;
+    growth: number;
+    byLocation: Array<{ city: string; count: number }>;
+  };
+  visitors: {
+    total: number;
+    unique: number;
+  };
+  revenue: {
+    total: number;
+    thisMonth: number;
+    byService: Array<{ service: string; amount: number }>;
+  };
+  consultations: {
+    total: number;
+    satisfaction: number;
+  };
+  pageViews: {
+    mostVisited: Array<{ path: string; views: number }>;
+  };
+}
+
+interface TimeRange {
+  start: Date;
+  end: Date;
+}
+
+interface AnalyticsDashboardProps {
   data: AnalyticsData;
   onTimeRangeChange: (range: TimeRange) => void;
 }
 
-interface StatCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: string | number;
-  subtitle: string;
-  color: string;
-}
-
-interface ChartContainerProps {
-  title: string;
-  children: ReactElement;
-}
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'] as const;
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 const TIME_RANGES = {
   '7d': 7,
   '30d': 30,
   '90d': 90,
 } as const;
 
-const StatCard = ({ icon, title, value, subtitle, color }: StatCardProps): JSX.Element => (
-  <Card>
+const StatCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
+  subtitle: string;
+  color: string;
+}> = ({ icon, title, value, subtitle, color }) => (
+  <Card sx={{ height: '100%' }}>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Box
@@ -87,7 +110,10 @@ const StatCard = ({ icon, title, value, subtitle, color }: StatCardProps): JSX.E
   </Card>
 );
 
-const ChartContainer = ({ title, children }: ChartContainerProps): JSX.Element => (
+const ChartContainer: React.FC<{
+  title: string;
+  children: React.ReactElement;
+}> = ({ title, children }) => (
   <Paper sx={{ p: 3, height: 400 }}>
     <Typography variant="h6" gutterBottom>
       {title}
@@ -100,15 +126,18 @@ const ChartContainer = ({ title, children }: ChartContainerProps): JSX.Element =
   </Paper>
 );
 
-export const AnalyticsDashboard = ({ data, onTimeRangeChange }: Props): JSX.Element => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ 
+  data, 
+  onTimeRangeChange 
+}) => {
   const [timeRange, setTimeRange] = useState<keyof typeof TIME_RANGES>('7d');
 
-  const handleTimeRangeChange = (event: SelectChangeEvent<string>): void => {
+  const handleTimeRangeChange = (event: SelectChangeEvent) => {
     const range = event.target.value as keyof typeof TIME_RANGES;
     setTimeRange(range);
     
-    const end = new Date('2025-02-14T14:22:39.000Z');
-    const start = new Date('2025-02-14T14:22:39.000Z');
+    const end = new Date();
+    const start = new Date(end);
     start.setDate(start.getDate() - TIME_RANGES[range]);
     
     onTimeRangeChange({ start, end });
