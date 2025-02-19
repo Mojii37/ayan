@@ -1,96 +1,102 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { RootState, User, AuthState } from '../../types/store.types';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { articleService } from '../../services/articleService';
+import type { Article, ArticleInput } from '../../types/content';
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  loading: false,
-  error: null,
-  isAuthenticated: false
-};
-
-interface CredentialsPayload {
-  user: User;
-  token: string;
+interface ArticleState {
+  articles: Article[];
+  currentArticle: Article | null;
+  loading: boolean;
+  error: string | null;
 }
 
-export const fetchUserProfile = createAsyncThunk(
-  'auth/fetchProfile',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+const initialState: ArticleState = {
+  articles: [],
+  currentArticle: null,
+  loading: false,
+  error: null,
+};
 
-      if (!response.ok) {
-        throw new Error('خطا در دریافت پروفایل کاربر');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'خطای ناشناخته');
-    }
+export const fetchArticles = createAsyncThunk(
+  'articles/fetchAll',
+  async () => {
+    const response = await articleService.getArticles();
+    return response;
   }
 );
 
-const authSlice = createSlice({
-  name: 'auth',
+export const createArticle = createAsyncThunk(
+  'articles/create',
+  async (articleData: ArticleInput) => {
+    const response = await articleService.createArticle(articleData);
+    return response;
+  }
+);
+
+export const updateArticle = createAsyncThunk(
+  'articles/update',
+  async ({ id, ...articleData }: Article) => {
+    const response = await articleService.updateArticle(id!, articleData);
+    return response;
+  }
+);
+
+export const deleteArticle = createAsyncThunk(
+  'articles/delete',
+  async (id: string) => {
+    await articleService.removeArticle(id);
+    return id;
+  }
+);
+
+const articleSlice = createSlice({
+  name: 'articles',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User | null>) => {
-      state.user = action.payload;
-      state.isAuthenticated = !!action.payload;
+    setCurrentArticle: (state, action) => {
+      state.currentArticle = action.payload;
     },
-    setToken: (state, action: PayloadAction<string | null>) => {
-      state.token = action.payload;
-      state.isAuthenticated = !!action.payload;
+    clearCurrentArticle: (state) => {
+      state.currentArticle = null;
     },
-    setCredentials: (state, action: PayloadAction<CredentialsPayload>) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.isAuthenticated = true;
-    },
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      state.error = null;
-    },
-    clearError: (state) => {
-      state.error = null;
-    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUserProfile.pending, (state) => {
+      // Fetch
+      .addCase(fetchArticles.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUserProfile.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(fetchArticles.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        state.error = null;
+        state.articles = action.payload;
       })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
+      .addCase(fetchArticles.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
-        state.isAuthenticated = false;
+        state.error = action.error.message || 'خطا در دریافت مقالات';
+      })
+      // Create
+      .addCase(createArticle.fulfilled, (state, action) => {
+        state.articles.push(action.payload);
+      })
+      // Update
+      .addCase(updateArticle.fulfilled, (state, action) => {
+        const index = state.articles.findIndex(article => article.id === action.payload.id);
+        if (index !== -1) {
+          state.articles[index] = action.payload;
+        }
+      })
+      // Delete
+      .addCase(deleteArticle.fulfilled, (state, action) => {
+        state.articles = state.articles.filter(article => article.id !== action.payload);
       });
-  }
+  },
 });
 
-export const { setUser, setToken, setCredentials, logout, clearError } = authSlice.actions;
+export const { setCurrentArticle, clearCurrentArticle } = articleSlice.actions;
 
-// Selectors
-export const selectUser = (state: RootState) => state.auth.user;
-export const selectToken = (state: RootState) => state.auth.token;
-export const selectIsAuthenticated = (state: RootState) => state.auth.isAuthenticated;
-export const selectAuthLoading = (state: RootState) => state.auth.loading;
-export const selectAuthError = (state: RootState) => state.auth.error;
+export const selectArticles = (state: { articles: ArticleState }) => state.articles.articles;
+export const selectCurrentArticle = (state: { articles: ArticleState }) => state.articles.currentArticle;
+export const selectArticlesLoading = (state: { articles: ArticleState }) => state.articles.loading;
+export const selectArticlesError = (state: { articles: ArticleState }) => state.articles.error;
 
-export default authSlice.reducer;
+export default articleSlice.reducer;

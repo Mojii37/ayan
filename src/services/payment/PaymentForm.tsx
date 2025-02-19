@@ -7,23 +7,28 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { ZarinpalService } from './ZarinPal';
+import { ZarinpalService } from './ZarinpalService';
+import { PaymentRequest, PaymentResponse } from '../../types/payment.types';
 
 interface PaymentFormProps {
   amount: number;
   description: string;
   onError: (error: string) => void;
+  onSuccess?: (response: PaymentResponse) => void;
   userInfo?: {
     mobile?: string;
     email?: string;
   };
+  metadata?: Record<string, unknown>;
 }
 
 export const PaymentForm: React.FC<PaymentFormProps> = ({
   amount,
   description,
   onError,
+  onSuccess,
   userInfo,
+  metadata
 }) => {
   const [loading, setLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -33,19 +38,28 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     setErrorMessage(null);
 
     try {
-      const callbackUrl = `${window.location.origin}/payment/verify`;
-      const response = await ZarinpalService.requestPayment({
+      const paymentRequest: PaymentRequest = {
         amount,
         description,
-        callbackUrl,
+        callbackUrl: '/payment/verify',
         mobile: userInfo?.mobile,
         email: userInfo?.email,
-      });
+        metadata
+      };
 
+      const response = await ZarinpalService.requestPayment(paymentRequest);
+      
+      if (onSuccess) {
+        onSuccess(response);
+      }
+
+      // Save payment amount in localStorage for verification
+      localStorage.setItem('payment_amount', amount.toString());
+      
       // Redirect to the payment gateway
       window.location.href = response.url;
-    } catch (_error) {
-      const message = 'Error connecting to payment gateway';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error connecting to payment gateway';
       setErrorMessage(message);
       onError(message);
     } finally {
@@ -56,12 +70,12 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <Paper sx={{ p: 3, maxWidth: 400, mx: 'auto' }}>
       <Typography variant="h6" gutterBottom align="center">
-        Payment Information
+        اطلاعات پرداخت
       </Typography>
 
       <Box sx={{ mb: 3 }}>
         <Typography variant="body1" gutterBottom>
-          Amount to Pay:
+          مبلغ قابل پرداخت:
         </Typography>
         <Typography variant="h5" color="primary">
           {new Intl.NumberFormat('fa-IR').format(amount)} ریال
@@ -89,7 +103,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
         {loading ? (
           <CircularProgress size={24} color="inherit" />
         ) : (
-          'Pay Online'
+          'پرداخت آنلاین'
         )}
       </Button>
     </Paper>

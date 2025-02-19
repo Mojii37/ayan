@@ -1,4 +1,11 @@
-import { ErrorLog, ErrorSeverity, ErrorSource, StoredError } from '../types/error';
+import type { 
+  ErrorLog, 
+  ErrorSeverity, 
+  ErrorSource, 
+  ErrorStatus, 
+  StoredError,
+  ErrorContext 
+} from '../types/error';
 
 export class ErrorService {
   private static readonly API_URL = '/api/errors';
@@ -9,12 +16,14 @@ export class ErrorService {
     return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
   }
 
-  private static getSystemInfo() {
+  private static getSystemInfo(): ErrorContext {
     return {
       browser: navigator.userAgent,
       os: navigator.platform,
       deviceType: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
       route: window.location.pathname,
+      userId: localStorage.getItem('userId') || undefined,
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -27,6 +36,7 @@ export class ErrorService {
       source: error.source || 'client',
       message: error.message || 'Unknown error',
       stack: error.stack,
+      status: 'new',
       context: {
         ...this.getSystemInfo(),
         ...error.context,
@@ -39,6 +49,7 @@ export class ErrorService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
           body: JSON.stringify(fullError),
         });
@@ -47,7 +58,7 @@ export class ErrorService {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         break;
-      } catch (error) {
+      } catch (err) {
         attempts++;
         if (attempts === this.MAX_RETRY_ATTEMPTS) {
           await this.storeErrorLocally(fullError);
@@ -70,8 +81,8 @@ export class ErrorService {
 
       storedErrors.push(storedError);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(storedErrors));
-    } catch (error) {
-      console.error('Failed to store error:', error);
+    } catch (err) {
+      console.error('Failed to store error:', err);
     }
   }
 
@@ -80,12 +91,17 @@ export class ErrorService {
     if (storedErrors.length === 0) return;
 
     const successfulSyncs: string[] = [];
+    
     for (const error of storedErrors) {
       try {
-        await this.logError(error);
+        await this.logError({
+          ...error,
+          timestamp: new Date(error.timestamp),
+          status: 'pending'
+        });
         successfulSyncs.push(error.id);
-      } catch (error) {
-        console.error('Error syncing:', error);
+      } catch (err) {
+        console.error('Error syncing:', err);
       }
     }
 
@@ -103,6 +119,7 @@ export class ErrorService {
         source: 'client',
         message: message.toString(),
         stack: error?.stack,
+        status: 'new',
         context: {
           source,
           line: lineno,
@@ -118,12 +135,37 @@ export class ErrorService {
         source: 'client',
         message: 'Unhandled Promise Rejection',
         stack: event.reason?.stack,
+        status: 'new',
         context: {
           reason: event.reason,
           url: window.location.href,
         },
       });
     });
+  }
+
+  // Helper method to update error status
+  static async updateErrorStatus(
+    errorId: string, 
+    status: ErrorStatus
+  ): Promise<void> {
+    try {
+      const response = await fetch(`${this.API_URL}/${errorId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update error status: ${response.status}`);
+      }
+    } catch (err) {
+      console.error('Failed to update error status:', err);
+      throw err;
+    }
   }
 }
 

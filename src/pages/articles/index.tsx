@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Container,
   Grid,
@@ -7,9 +8,12 @@ import {
   TextField,
   MenuItem,
   Pagination,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
-import { ContentCard } from '../components/content/ContentCard';
-import { Article } from '../types/content';
+import { ContentCard } from '../../components/content/ContentCard';
+import { articleService } from '../../services/articleService';
+import { Article } from '../../types/content';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -25,17 +29,20 @@ const Articles = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [page, setPage] = useState(1);
 
-  // در نسخه واقعی، این داده‌ها از API دریافت می‌شوند
-  const [articles] = useState<Article[]>([
-    // نمونه داده
-  ]);
+  const { data: articles = [], isLoading, error } = useQuery<Article[]>(
+    ['articles'],
+    () => articleService.getArticles(),
+    {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  );
 
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesCategory =
-      selectedCategory === 'all' || article.category.id === selectedCategory;
+      selectedCategory === 'all' || article.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -45,11 +52,27 @@ const Articles = () => {
     page * ITEMS_PER_PAGE
   );
 
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ m: 2 }}>
+        خطا در دریافت مقالات
+      </Alert>
+    );
+  }
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ py: 4 }}>
         <Typography variant="h4" color="primary" gutterBottom>
-          مقالات آیان تراز
+          مقالات
         </Typography>
 
         <Grid container spacing={3} sx={{ mb: 4 }}>

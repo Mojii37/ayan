@@ -7,25 +7,35 @@ export interface Category {
 export type ContentStatus = 'draft' | 'published' | 'archived';
 
 export interface Content {
-  id: string; // id should not be optional here to avoid duplication
+  id?: string;
   title: string;
   content: string;
   categoryId: string;
   category: Category;
-  type: 'article' | 'news' | 'page';
-  status: 'draft' | 'published';
+  status: ContentStatus;
   createdAt: string;
   updatedAt: string;
+  thumbnail?: string;
+  summary?: string;
+  slug: string;
+  tags: string[];
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  readTime?: number;
+  viewCount: number;
 }
 
 export interface Article extends Content {
   excerpt: string;
-  tags: string[];
 }
 
-export interface ContentFormData {
+export interface ArticleInput {
   title: string;
-  type: 'article' | 'news' | 'page';
   content: string;
-  status: 'draft' | 'published';
+  excerpt: string;
+  categoryId: string;
+  tags: string[];
+  status: ContentStatus;
 }

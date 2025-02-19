@@ -8,7 +8,7 @@ import {
   CircularProgress,
   Button,
 } from '@mui/material';
-import { ZarinpalService } from '../services/payment/zarinpal';
+import { ZarinpalService } from '../services/payment/ZarinpalService';
 import { CheckCircle, Error } from '@mui/icons-material';
 
 const PaymentVerification = () => {

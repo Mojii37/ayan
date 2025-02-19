@@ -1,13 +1,27 @@
-import React from 'react';
-import { Routes as RouterRoutes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { CircularProgress, Box } from '@mui/material';
 
-const Routes: React.FC = () => {
+const AdminArticles = lazy(() => import('../pages/admin/articles'));
+const ArticleForm = lazy(() => import('../pages/admin/articles/form'));
+
+const AppRoutes = () => {
   return (
-    <RouterRoutes>
-      <Route path="/" element={<div>Home Page</div>} />
-      {/* Add more routes as needed */}
-    </RouterRoutes>
+    <Suspense
+      fallback={
+        <Box display="flex" justifyContent="center" p={4}>
+          <CircularProgress />
+        </Box>
+      }
+    >
+      <Routes>
+        <Route path="/" element={<div>صفحه اصلی</div>} />
+        <Route path="/admin/articles" element={<AdminArticles />} />
+        <Route path="/admin/articles/new" element={<ArticleForm />} />
+        <Route path="/admin/articles/:id/edit" element={<ArticleForm />} />
+      </Routes>
+    </Suspense>
   );
 };
 
-export default Routes;
+export default AppRoutes;
