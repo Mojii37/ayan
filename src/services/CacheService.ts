@@ -1,78 +1,85 @@
-import { CachedData } from '../types/store.types';
+export interface CachedData<T = unknown> {
+  data: T;
+  createdAt: number;
+  expiresAt: number;
+  version?: string;
+  tags?: string[];
+}
 
-export class CacheService {
+import type { CachedData } from '../types/store.types';
+
+export interface ICacheService {
+  clearExpired(maxAge?: number): void;
+  getCachedItem<T = unknown>(key: string): CachedData<T> | undefined;
+  setCachedItem<T = unknown>(key: string, data: T, ttl?: number): void;
+}
+
+export class CacheService implements ICacheService {
   private static instance: CacheService;
+  private storage: Storage;
 
-  private constructor() {}
+  private constructor() {
+    this.storage = window.localStorage;
+  }
 
-  static getInstance(): CacheService {
+  public static getInstance(): CacheService {
     if (!CacheService.instance) {
       CacheService.instance = new CacheService();
     }
     return CacheService.instance;
   }
 
+  clearExpired(maxAge?: number): void {
+    const now = Date.now();
+    const defaultMaxAge = 24 * 60 * 60 * 1000; // 24 hours
+    const expirationTime = now - (maxAge ?? defaultMaxAge);
+
+    Object.keys(this.storage).forEach((key) => {
+      try {
+        const item = this.storage.getItem(key);
+        if (item) {
+          const cached = JSON.parse(item) as CachedData;
+          if (cached.createdAt < expirationTime || now > cached.expiresAt) {
+            this.storage.removeItem(key);
+          }
+        }
+      } catch (error) {
+        console.warn(`Error clearing expired cache for key ${key}:`, error);
+      }
+    });
+  }
+
   getCachedItem<T = unknown>(key: string): CachedData<T> | undefined {
     try {
-      const item = localStorage.getItem(`cache_${key}`);
+      const item = this.storage.getItem(key);
       if (!item) return undefined;
 
-      const cachedData: CachedData<T> = JSON.parse(item);
-      if (this.isExpired(cachedData)) {
-        this.removeCachedItem(key);
+      const cached = JSON.parse(item) as CachedData<T>;
+      const now = Date.now();
+      
+      if (now > cached.expiresAt) {
+        this.storage.removeItem(key);
         return undefined;
       }
-
-      return cachedData;
+      return cached;
     } catch (error) {
-      console.error('Error getting cached item:', error);
+      console.warn(`Error getting cached item for key ${key}:`, error);
       return undefined;
     }
   }
 
-  setCachedItem<T = unknown>(key: string, data: T, ttl: number = 3600000): void {
+  setCachedItem<T = unknown>(key: string, data: T, ttl = 3600000): void {
     try {
-      const cachedData: CachedData<T> = {
-        data,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + ttl,
-        version: '1.0',
-        tags: [],
-      };
-
-      localStorage.setItem(`cache_${key}`, JSON.stringify(cachedData));
-    } catch (error) {
-      console.error('Error setting cached item:', error);
-    }
-  }
-
-  clearExpired(maxAge: number = 86400000): void {
-    try {
-      const keys = Object.keys(localStorage);
       const now = Date.now();
-
-      keys.forEach(key => {
-        if (key.startsWith('cache_')) {
-          const item = localStorage.getItem(key);
-          if (item) {
-            const cachedData: CachedData = JSON.parse(item);
-            if (this.isExpired(cachedData) || (now - cachedData.createdAt > maxAge)) {
-              localStorage.removeItem(key);
-            }
-          }
-        }
-      });
+      const item: CachedData<T> = {
+        data,
+        createdAt: now,
+        expiresAt: now + ttl,
+      };
+      this.storage.setItem(key, JSON.stringify(item));
     } catch (error) {
-      console.error('Error clearing expired cache:', error);
+      console.warn(`Error setting cached item for key ${key}:`, error);
     }
-  }
-
-  private isExpired(cachedData: CachedData): boolean {
-    return Date.now() > cachedData.expiresAt;
-  }
-
-  private removeCachedItem(key: string): void {
-    localStorage.removeItem(`cache_${key}`);
   }
 }
 

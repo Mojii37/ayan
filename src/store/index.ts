@@ -1,11 +1,15 @@
-import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
+import type { Middleware } from '@reduxjs/toolkit';
+import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import settingsReducer from './slices/settingsSlice';
 import cacheReducer from './slices/cacheSlice';
-import apiMiddleware from './middleware/api';
+import { apiMiddleware } from './middleware/apiMiddleware';
+import { cacheMiddleware } from './middleware/cacheMiddleware';
+import type { RootState } from '../types/store.types';
 
-// تعریف و پیکربندی استور
+// Configure Store
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -17,22 +21,19 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['cache/setCachedItem'],
-        ignoredActionPaths: ['payload.data'],
-        ignoredPaths: ['cache'],
+        ignoredActionPaths: ['payload.data', 'meta.api'],
+        ignoredPaths: ['cache.items', 'cache.service'],
       },
-    }).concat(apiMiddleware),
+    }).concat([apiMiddleware as Middleware, cacheMiddleware as Middleware]),
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
-// تعریف تایپ‌های اصلی
-export type RootState = ReturnType<typeof store.getState>;
+// Infer types from store
 export type AppDispatch = typeof store.dispatch;
 
-// تعریف تایپ‌های کمکی برای استفاده در کامپوننت‌ها
-export type AppThunk<ReturnType = void> = ThunkAction<
-  ReturnType,
-  RootState,
-  unknown,
-  Action<string>
->;
+// Define typed hooks
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
+export type { RootState };
 export default store;

@@ -10,3 +10,9 @@ export interface User {
   role?: UserRole;
   status?: UserStatus;
 }
+
+
+export interface User {
+  id: number;
+  name: string;
+}

@@ -1,5 +1,4 @@
-// src/components/admin/backup/BackupHistory.tsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   Table, 
   TableBody, 
@@ -20,31 +19,70 @@ interface BackupHistoryItem {
   size: string;
 }
 
-const BackupHistory: React.FC = () => {
-  const [backupHistory, setBackupHistory] = useState<BackupHistoryItem[]>([
-    {
-      id: '1',
-      date: '۱۴۰۲/۰۹/۱۵ ساعت ۱۴:۳۰',
-      type: 'database',
-      status: 'successful',
-      size: '۲.۵ گیگابایت'
-    },
-    {
-      id: '2',
-      date: '۱۴۰۲/۰۹/۱۰ ساعت ۰۹:۱۵',
-      type: 'files',
-      status: 'failed',
-      size: '۳.۱ گیگابایت'
-    }
-  ]);
+interface BackupHistoryProps {
+  initialBackups?: BackupHistoryItem[];
+  onDownload?: (id: string) => void;
+  onBackupUpdate?: (backups: BackupHistoryItem[]) => void;
+}
 
-  const getStatusColor = (status: string) => {
+const initialBackupData: BackupHistoryItem[] = [
+  {
+    id: '1',
+    date: '۱۴۰۲/۰۹/۱۵ ساعت ۱۴:۳۰',
+    type: 'database',
+    status: 'successful',
+    size: '۲.۵ گیگابایت'
+  },
+  {
+    id: '2',
+    date: '۱۴۰۲/۰۹/۱۰ ساعت ۰۹:۱۵',
+    type: 'files',
+    status: 'failed',
+    size: '۳.۱ گیگابایت'
+  }
+];
+
+export const BackupHistory: React.FC<BackupHistoryProps> = ({ 
+  initialBackups,
+  onDownload,
+  onBackupUpdate 
+}) => {
+  const [backups, setBackups] = useState<BackupHistoryItem[]>(
+    initialBackups || initialBackupData
+  );
+
+  const updateBackups = useCallback((newBackups: BackupHistoryItem[]) => {
+    setBackups(newBackups);
+    onBackupUpdate?.(newBackups);
+  }, [onBackupUpdate]);
+
+  const updateBackup = useCallback((id: string, newData: Partial<BackupHistoryItem>) => {
+    const updatedBackups = backups.map(backup => 
+      backup.id === id ? { ...backup, ...newData } : backup
+    );
+    updateBackups(updatedBackups);
+  }, [backups, updateBackups]);
+
+  const addBackup = useCallback((newBackup: BackupHistoryItem) => {
+    const updatedBackups = [...backups, newBackup];
+    updateBackups(updatedBackups);
+  }, [backups, updateBackups]);
+
+  const removeBackup = useCallback((id: string) => {
+    const updatedBackups = backups.filter(backup => backup.id !== id);
+    updateBackups(updatedBackups);
+  }, [backups, updateBackups]);
+
+  const getStatusColor = (status: BackupHistoryItem['status']) => {
     return status === 'successful' ? 'green' : 'red';
   };
 
   const handleDownloadBackup = (id: string) => {
-    // TODO: Implement backup download logic
-    console.log(`دانلود بکاپ با شناسه ${id}`);
+    if (onDownload) {
+      onDownload(id);
+    } else {
+      console.log(`دانلود بکاپ با شناسه ${id}`);
+    }
   };
 
   return (
@@ -64,10 +102,12 @@ const BackupHistory: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {backupHistory.map((backup) => (
+            {backups.map((backup) => (
               <TableRow key={backup.id}>
                 <TableCell>{backup.date}</TableCell>
-                <TableCell>{backup.type === 'database' ? 'پایگاه داده' : 'فایل‌ها'}</TableCell>
+                <TableCell>
+                  {backup.type === 'database' ? 'پایگاه داده' : 'فایل‌ها'}
+                </TableCell>
                 <TableCell>
                   <Typography 
                     color={getStatusColor(backup.status)}

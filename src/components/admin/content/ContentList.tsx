@@ -1,188 +1,96 @@
-// src/components/admin/content/ContentList.tsx
-import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
+import React from 'react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
   TableRow,
+  Paper,
   IconButton,
   Chip,
-  Menu,
-  MenuItem,
-  TextField,
-  Button,
-  Tooltip,
+  Box,
+  Typography
 } from '@mui/material';
-import { Edit, MoreVert, Add, Visibility, Search } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { Content } from '../../../types/content';
+import { Edit, Delete } from '@mui/icons-material';
+import type { Content } from '../../../types/content';
 
 interface ContentListProps {
-  type: 'article' | 'tutorial';
-  items: Content[];
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: string) => void;
+  contents: Content[];
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export const ContentList: React.FC<ContentListProps> = ({
-  type,
-  items,
-  onDelete,
-  onStatusChange,
+export const ContentList: React.FC<ContentListProps> = ({ 
+  contents = [], 
+  onEdit,
+  onDelete 
 }) => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedItem(id);
+  const getContentTypeLabel = (type: Content['type']) => {
+    const types = {
+      article: 'مقاله',
+      news: 'خبر',
+      page: 'صفحه'
+    };
+    return types[type] || type;
   };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedItem(null);
-  };
-
-  const filteredItems = items.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
-    <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5">
-          مدیریت {type === 'article' ? 'مقالات' : 'آموزش‌ها'}
+    <Box>
+      {contents.length === 0 ? (
+        <Typography variant="body1" sx={{ textAlign: 'center', py: 4 }}>
+          محتوایی یافت نشد
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => navigate(`/admin/${type}s/new`)}
-        >
-          افزودن {type === 'article' ? 'مقاله' : 'آموزش'} جدید
-        </Button>
-      </Box>
-
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="جستجو..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: <Search />,
-          }}
-        />
-      </Box>
-
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>عنوان</TableCell>
-              <TableCell>نویسنده</TableCell>
-              <TableCell>دسته‌بندی</TableCell>
-              <TableCell>تاریخ انتشار</TableCell>
-              <TableCell>بازدید</TableCell>
-              <TableCell>وضعیت</TableCell>
-              <TableCell>عملیات</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredItems.map(item => (
-              <TableRow key={item.id}>
-                <TableCell>{item.title}</TableCell>
-                <TableCell>{item.author.name}</TableCell>
-                <TableCell>{item.category.title}</TableCell>
-                <TableCell>
-                  {new Date(item.createdAt).toLocaleDateString('fa-IR')}
-                </TableCell>
-                <TableCell>{item.viewCount}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={item.status}
-                    color={
-                      item.status === 'published'
-                        ? 'success'
-                        : item.status === 'draft'
-                          ? 'default'
-                          : 'warning'
-                    }
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Tooltip title="مشاهده">
-                    <IconButton
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>عنوان</TableCell>
+                <TableCell>نوع</TableCell>
+                <TableCell>تاریخ ایجاد</TableCell>
+                <TableCell>وضعیت</TableCell>
+                <TableCell>عملیات</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {contents.map((content) => (
+                <TableRow key={content.id}>
+                  <TableCell>{content.title}</TableCell>
+                  <TableCell>{getContentTypeLabel(content.type)}</TableCell>
+                  <TableCell>{content.createdAt}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={content.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}
+                      color={content.status === 'published' ? 'success' : 'default'}
                       size="small"
-                      onClick={() =>
-                        window.open(`/${type}s/${item.slug}`, '_blank')
-                      }
-                    >
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="ویرایش">
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        navigate(`/admin/${type}s/${item.id}/edit`)
-                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => onEdit?.(content.id)}
+                      aria-label="ویرایش"
                     >
                       <Edit fontSize="small" />
                     </IconButton>
-                  </Tooltip>
-                  <IconButton
-                    size="small"
-                    onClick={e => handleMenuOpen(e, item.id)}
-                  >
-                    <MoreVert fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => {
-            if (selectedItem) onStatusChange(selectedItem, 'published');
-            handleMenuClose();
-          }}
-        >
-          انتشار
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (selectedItem) onStatusChange(selectedItem, 'draft');
-            handleMenuClose();
-          }}
-        >
-          پیش‌نویس
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (selectedItem) onDelete(selectedItem);
-            handleMenuClose();
-          }}
-          sx={{ color: 'error.main' }}
-        >
-          حذف
-        </MenuItem>
-      </Menu>
-    </Paper>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => onDelete?.(content.id)} 
+                      color="error"
+                      aria-label="حذف"
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Box>
   );
 };
+
+export default ContentList;

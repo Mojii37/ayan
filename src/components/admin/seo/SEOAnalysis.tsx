@@ -1,5 +1,4 @@
-// src/components/admin/seo/SEOAnalysis.tsx
-import React from 'react';
+import React, { ReactElement } from 'react';
 import {
   Paper,
   Box,
@@ -12,25 +11,37 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { CheckCircle, Error, Warning } from '@mui/icons-material';
-import { SEOAnalysis as SEOAnalysisType } from '../../../types/seo';
+import type { SEOAnalysis as SEOAnalysisType, SEOIssue } from '../../../types/seo';
 
 interface SEOAnalysisProps {
   analysis: SEOAnalysisType;
 }
 
-const priorityColors = {
+const priorityColors: Record<SEOIssue['priority'], string> = {
   high: '#f44336',
   medium: '#ff9800',
   low: '#4caf50',
 };
 
-const typeIcons = {
+const typeIcons: Record<SEOIssue['type'], ReactElement> = {
   error: <Error color="error" />,
   warning: <Warning color="warning" />,
   success: <CheckCircle color="success" />,
 };
 
+const priorityLabels: Record<SEOIssue['priority'], string> = {
+  high: 'بالا',
+  medium: 'متوسط',
+  low: 'پایین',
+};
+
 export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
+  const getScoreColor = (score: number): 'success' | 'warning' | 'error' => {
+    if (score >= 80) return 'success';
+    if (score >= 50) return 'warning';
+    return 'error';
+  };
+
   return (
     <Paper sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -39,13 +50,7 @@ export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
             variant="determinate"
             value={analysis.score}
             size={60}
-            color={
-              analysis.score >= 80
-                ? 'success'
-                : analysis.score >= 50
-                  ? 'warning'
-                  : 'error'
-            }
+            color={getScoreColor(analysis.score)}
           />
           <Box
             sx={{
@@ -59,12 +64,8 @@ export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
               justifyContent: 'center',
             }}
           >
-            <Typography
-              variant="caption"
-              component="div"
-              color="text.secondary"
-            >
-              {analysis.score}%
+            <Typography variant="caption" component="div" color="text.secondary">
+              {`${analysis.score}%`}
             </Typography>
           </Box>
         </Box>
@@ -74,7 +75,7 @@ export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
       <List>
         {analysis.issues.map((issue, index) => (
           <ListItem
-            key={index}
+            key={`${issue.type}-${index}`}
             sx={{
               mb: 2,
               border: 1,
@@ -91,13 +92,7 @@ export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
                     راه‌حل: {issue.howToFix}
                   </Typography>
                   <Chip
-                    label={`اولویت: ${
-                      issue.priority === 'high'
-                        ? 'بالا'
-                        : issue.priority === 'medium'
-                          ? 'متوسط'
-                          : 'پایین'
-                    }`}
+                    label={`اولویت: ${priorityLabels[issue.priority]}`}
                     size="small"
                     sx={{
                       bgcolor: `${priorityColors[issue.priority]}20`,
@@ -113,3 +108,5 @@ export const SEOAnalysis: React.FC<SEOAnalysisProps> = ({ analysis }) => {
     </Paper>
   );
 };
+
+export default SEOAnalysis;

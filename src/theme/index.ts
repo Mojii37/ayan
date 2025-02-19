@@ -1,16 +1,27 @@
-import { createTheme, Theme } from '@mui/material/styles';
+import { createTheme, ThemeOptions } from '@mui/material/styles';
 import { faIR } from '@mui/material/locale';
 import createCache from '@emotion/cache';
 import rtlPlugin from 'stylis-plugin-rtl';
+import { prefixer } from 'stylis';
 
-// تنظیمات RTL
+// Extend MUI theme types
+declare module '@mui/material/styles' {
+  interface Palette {
+    gold: Palette['primary'];
+  }
+  interface PaletteOptions {
+    gold?: PaletteOptions['primary'];
+  }
+}
+
+// RTL configuration
 export const cacheRtl = createCache({
   key: 'muirtl',
-  stylisPlugins: [rtlPlugin],
+  stylisPlugins: [prefixer, rtlPlugin],
   prepend: true,
 });
 
-// تعریف تایپ برای پالت رنگ‌ها
+// Color palette types
 interface DarkGoldPalette {
   gold: {
     main: string;
@@ -28,7 +39,7 @@ interface DarkGoldPalette {
   };
 }
 
-// پالت رنگ‌های مشکی و طلایی
+// Dark gold color palette
 const darkGold: DarkGoldPalette = {
   gold: {
     main: '#FFD700',
@@ -46,28 +57,17 @@ const darkGold: DarkGoldPalette = {
   },
 };
 
-export const theme: Theme = createTheme({
+// Theme configuration
+const themeOptions: ThemeOptions = {
   direction: 'rtl',
   typography: {
     fontFamily: 'IRANSans, Vazirmatn, Arial, sans-serif',
-    h1: {
-      color: darkGold.gold.main,
-    },
-    h2: {
-      color: darkGold.gold.main,
-    },
-    h3: {
-      color: darkGold.gold.main,
-    },
-    h4: {
-      color: darkGold.gold.main,
-    },
-    h5: {
-      color: darkGold.gold.main,
-    },
-    h6: {
-      color: darkGold.gold.main,
-    },
+    h1: { color: darkGold.gold.main },
+    h2: { color: darkGold.gold.main },
+    h3: { color: darkGold.gold.main },
+    h4: { color: darkGold.gold.main },
+    h5: { color: darkGold.gold.main },
+    h6: { color: darkGold.gold.main },
   },
   palette: {
     mode: 'dark',
@@ -88,6 +88,28 @@ export const theme: Theme = createTheme({
     gold: darkGold.gold,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          scrollbarWidth: 'thin',
+          scrollbarColor: `${darkGold.gold.main} ${darkGold.background.default}`,
+          '&::-webkit-scrollbar': {
+            width: 8,
+            height: 8,
+          },
+          '&::-webkit-scrollbar-track': {
+            background: darkGold.background.default,
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: darkGold.gold.main,
+            borderRadius: 4,
+            '&:hover': {
+              backgroundColor: darkGold.gold.dark,
+            },
+          },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
@@ -184,4 +206,9 @@ export const theme: Theme = createTheme({
       },
     },
   },
-}, faIR);
+};
+
+// Create and export theme
+export const theme = createTheme(themeOptions, faIR);
+
+export type AppTheme = typeof theme;

@@ -1,63 +1,43 @@
-// src/components/admin/content/ContentManagement.tsx
 import React, { useState } from 'react';
-import { 
-  Tabs, 
-  Tab, 
-  Box, 
-  Typography 
-} from '@mui/material';
-import ContentList from './ContentList';
-import ContentForm from './ContentForm';
+import { Box, Paper, Tab } from '@mui/material';
+import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { ContentList } from './ContentList';
+import { ContentForm } from './ContentForm';
+import { Content, ContentFormData } from '../../../types/content';
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
+export const ContentManagement: React.FC = () => {
+  const [tab, setTab] = useState('list');
+  const [contents] = useState<Content[]>([]);
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
+    setTab(newValue);
+  };
 
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`content-tabpanel-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography component="div">{children}</Typography>
-        </Box>
-      )}
-    </div>
-  );
-}
-
-const ContentManagement: React.FC = () => {
-  const [value, setValue] = useState(0);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
+  const handleSubmit = async (data: ContentFormData) => {
+    console.log('Form submitted:', data);
+    setTab('list');
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs 
-          value={value} 
-          onChange={handleChange} 
-          aria-label="content management tabs"
-        >
-          <Tab label="لیست محتوا" />
-          <Tab label="ایجاد محتوای جدید" />
-        </Tabs>
-      </Box>
-      <TabPanel value={value} index={0}>
-        <ContentList />
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <ContentForm />
-      </TabPanel>
-    </Box>
+    <Paper sx={{ width: '100%' }}>
+      <TabContext value={tab}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <TabList onChange={handleChange} aria-label="content management tabs">
+            <Tab label="لیست محتوا" value="list" />
+            <Tab label="ایجاد محتوای جدید" value="create" />
+          </TabList>
+        </Box>
+        <TabPanel value="list">
+          <ContentList
+            contents={contents}
+            onEdit={(id) => console.log('Edit:', id)}
+            onDelete={(id) => console.log('Delete:', id)}
+          />
+        </TabPanel>
+        <TabPanel value="create">
+          <ContentForm onSubmit={handleSubmit} />
+        </TabPanel>
+      </TabContext>
+    </Paper>
   );
+};

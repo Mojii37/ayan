@@ -1,11 +1,13 @@
 import authReducer, { setCredentials, logout } from '../authSlice';
-import { User } from '../../../types/user';
+import type { User, AuthState } from '../../../types/store.types';
 
 describe('authSlice', () => {
-  const initialState = {
+  const initialState: AuthState = {
     isAuthenticated: false,
     user: null,
     token: null,
+    loading: false,
+    error: null
   };
 
   it('should handle initial state', () => {
@@ -32,7 +34,7 @@ describe('authSlice', () => {
       name: 'Test User' 
     };
     const actual = authReducer(
-      { isAuthenticated: true, user, token: 'token' }, 
+      { isAuthenticated: true, user, token: 'token', loading: false, error: null }, 
       logout()
     );
     expect(actual).toEqual(initialState);

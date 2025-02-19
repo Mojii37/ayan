@@ -2,6 +2,7 @@ export interface MetaTag {
   name: string;
   content: string;
 }
+
 export interface OpenGraph {
   title: string;
   description: string;
@@ -9,6 +10,7 @@ export interface OpenGraph {
   url: string;
   type: 'website' | 'article';
 }
+
 export interface SEOData {
   title: string;
   description: string;
@@ -17,14 +19,17 @@ export interface SEOData {
   canonical: string;
   metaTags: MetaTag[];
   openGraph: OpenGraph;
-  schema: object;
+  schema: Record<string, unknown>;
 }
+
+export interface SEOIssue {
+  type: 'error' | 'warning' | 'success';
+  message: string;
+  priority: 'high' | 'medium' | 'low';
+  howToFix: string;
+}
+
 export interface SEOAnalysis {
   score: number;
-  issues: Array<{
-    type: 'error' | 'warning' | 'success';
-    message: string;
-    priority: 'high' | 'medium' | 'low';
-    howToFix: string;
-  }>;
+  issues: SEOIssue[];
 }

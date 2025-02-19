@@ -1,27 +1,25 @@
-// src/store/slices/settingsSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../store'; // مسیر این فایل را بر اساس ساختار پروژه خود تنظیم کنید
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type SupportedLanguage = 'fa' | 'en' | 'ar';
-export type FontSize = 'small' | 'medium' | 'large';
+export interface ThemeCustomColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
 
 export interface SettingsState {
   theme: {
-    mode: ThemeMode;
+    mode: 'light' | 'dark' | 'system';
     autoSwitch: boolean;
-    customColors?: {
-      primary: string;
-      secondary: string;
-      accent: string;
-    };
+    customColors: ThemeCustomColors | null;
   };
   language: {
-    current: SupportedLanguage;
+    current: 'fa' | 'en' | 'ar';
     direction: 'rtl' | 'ltr';
     dateFormat: 'jalali' | 'gregorian';
   };
   interface: {
-    fontSize: FontSize;
+    fontSize: 'small' | 'medium' | 'large';
     compactMode: boolean;
     sidebarCollapsed: boolean;
     animationsEnabled: boolean;
@@ -37,7 +35,7 @@ export interface SettingsState {
     highContrast: boolean;
     reducedMotion: boolean;
     screenReader: boolean;
-    fontSize: FontSize;
+    fontSize: 'small' | 'medium' | 'large';
   };
   privacy: {
     analyticsEnabled: boolean;
@@ -50,11 +48,7 @@ const initialState: SettingsState = {
   theme: {
     mode: 'light',
     autoSwitch: true,
-    customColors: {
-      primary: '#1a73e8',
-      secondary: '#4285f4',
-      accent: '#fbbc04',
-    },
+    customColors: null,
   },
   language: {
     current: 'fa',
@@ -91,68 +85,50 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    setThemeMode(state, action: PayloadAction<ThemeMode>) {
+    setThemeMode: (state, action: PayloadAction<SettingsState['theme']['mode']>) => {
       state.theme.mode = action.payload;
     },
-    toggleAutoTheme(state) {
+    toggleAutoTheme: (state) => {
       state.theme.autoSwitch = !state.theme.autoSwitch;
     },
-    updateCustomColors(state, action: PayloadAction<Partial<typeof initialState.theme.customColors>>) {
-      if (state.theme.customColors) {
-        state.theme.customColors = {
-          ...state.theme.customColors,
-          ...action.payload,
-        };
-      }
+    updateCustomColors: (state, action: PayloadAction<ThemeCustomColors | null>) => {
+      state.theme.customColors = action.payload;
     },
-    setLanguage(state, action: PayloadAction<SupportedLanguage>) {
+    setLanguage: (state, action: PayloadAction<SettingsState['language']['current']>) => {
       state.language.current = action.payload;
       state.language.direction = action.payload === 'fa' || action.payload === 'ar' ? 'rtl' : 'ltr';
     },
-    setDateFormat(state, action: PayloadAction<'jalali' | 'gregorian'>) {
+    setDateFormat: (state, action: PayloadAction<SettingsState['language']['dateFormat']>) => {
       state.language.dateFormat = action.payload;
     },
-    updateInterface(state, action: PayloadAction<Partial<typeof initialState.interface>>) {
-      state.interface = {
-        ...state.interface,
-        ...action.payload,
-      };
+    updateInterface: (state, action: PayloadAction<Partial<SettingsState['interface']>>) => {
+      Object.assign(state.interface, action.payload);
     },
-    toggleSidebar(state) {
+    toggleSidebar: (state) => {
       state.interface.sidebarCollapsed = !state.interface.sidebarCollapsed;
     },
-    updateNotificationSettings(state, action: PayloadAction<Partial<typeof initialState.notifications>>) {
-      state.notifications = {
-        ...state.notifications,
-        ...action.payload,
-      };
+    updateNotificationSettings: (state, action: PayloadAction<Partial<SettingsState['notifications']>>) => {
+      Object.assign(state.notifications, action.payload);
     },
-    updateAccessibilitySettings(state, action: PayloadAction<Partial<typeof initialState.accessibility>>) {
-      state.accessibility = {
-        ...state.accessibility,
-        ...action.payload,
-      };
+    updateAccessibilitySettings: (state, action: PayloadAction<Partial<SettingsState['accessibility']>>) => {
+      Object.assign(state.accessibility, action.payload);
     },
-    updatePrivacySettings(state, action: PayloadAction<Partial<typeof initialState.privacy>>) {
-      state.privacy = {
-        ...state.privacy,
-        ...action.payload,
-      };
+    updatePrivacySettings: (state, action: PayloadAction<Partial<SettingsState['privacy']>>) => {
+      Object.assign(state.privacy, action.payload);
     },
     resetSettings: () => initialState,
-    resetSection(state, action: PayloadAction<keyof SettingsState>) {
-      state[action.payload] = initialState[action.payload];
-    },
+    resetSection: (state, action: PayloadAction<keyof SettingsState>) => {
+      const key = action.payload;
+      if (key in initialState) {
+        return {
+          ...state,
+          [key]: { ...initialState[key] }
+        };
+      }
+      return state;
+    }
   },
 });
-
-// Selectors
-export const selectThemeMode = (state: { settings: SettingsState }) => state.settings.theme.mode;
-export const selectLanguage = (state: { settings: SettingsState }) => state.settings.language.current;
-export const selectDirection = (state: { settings: SettingsState }) => state.settings.language.direction;
-export const selectInterface = (state: { settings: SettingsState }) => state.settings.interface;
-export const selectNotifications = (state: { settings: SettingsState }) => state.settings.notifications;
-export const selectAccessibility = (state: { settings: SettingsState }) => state.settings.accessibility;
 
 export const {
   setThemeMode,
@@ -168,5 +144,17 @@ export const {
   resetSettings,
   resetSection,
 } = settingsSlice.actions;
+
+// Selectors
+export const selectSettings = (state: RootState) => state.settings;
+export const selectTheme = (state: RootState) => state.settings.theme;
+export const selectThemeMode = (state: RootState) => state.settings.theme.mode;
+export const selectLanguage = (state: RootState) => state.settings.language;
+export const selectDirection = (state: RootState) => state.settings.language.direction;
+export const selectInterface = (state: RootState) => state.settings.interface;
+export const selectNotifications = (state: RootState) => state.settings.notifications;
+export const selectAccessibility = (state: RootState) => state.settings.accessibility;
+export const selectPrivacy = (state: RootState) => state.settings.privacy;
+export const selectCustomColors = (state: RootState) => state.settings.theme.customColors;
 
 export default settingsSlice.reducer;

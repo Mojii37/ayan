@@ -10,6 +10,7 @@ import { CacheProvider } from '@emotion/react';
 import { store } from './store';
 import { theme, cacheRtl } from './theme';
 import App from './App';
+import './index.css';
 
 const globalStyles = {
   '*': {
@@ -49,9 +50,9 @@ const globalStyles = {
 };
 
 const ErrorPage: React.FC = () => (
-  <div 
-    role="alert" 
-    style={{ 
+  <div
+    role="alert"
+    style={{
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',

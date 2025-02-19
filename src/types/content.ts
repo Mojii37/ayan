@@ -7,12 +7,13 @@ export interface Category {
 export type ContentStatus = 'draft' | 'published' | 'archived';
 
 export interface Content {
-  id?: string;
+  id: string; // id should not be optional here to avoid duplication
   title: string;
   content: string;
   categoryId: string;
   category: Category;
-  status: ContentStatus;
+  type: 'article' | 'news' | 'page';
+  status: 'draft' | 'published';
   createdAt: string;
   updatedAt: string;
 }
@@ -20,4 +21,11 @@ export interface Content {
 export interface Article extends Content {
   excerpt: string;
   tags: string[];
+}
+
+export interface ContentFormData {
+  title: string;
+  type: 'article' | 'news' | 'page';
+  content: string;
+  status: 'draft' | 'published';
 }
