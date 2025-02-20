@@ -1,14 +1,17 @@
+import { describe, it, expect } from 'vitest';
 import authReducer, { setCredentials, logout } from '../authSlice';
-import type { User } from '../../../types/user';
-import type { AuthState } from '../../../types/store.types';
+import type { User, AuthState } from '../../../types/auth.types';
+import { MOCK_DATA, mockToken, mockRefreshToken } from '../../../utils/mockData';
 
 describe('authSlice', () => {
   const initialState: AuthState = {
     isAuthenticated: false,
     user: null,
     token: null,
+    refreshToken: null,
+    lastLogin: null,
     loading: false,
-    error: null,
+    error: null
   };
 
   it('should handle initial state', () => {
@@ -16,39 +19,43 @@ describe('authSlice', () => {
   });
 
   it('should handle setCredentials', () => {
-    const user: User = { 
-      id: 1, 
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'user',
-      status: 'active'
+    const mockUser: User = {
+      ...MOCK_DATA.currentUser
     };
+
     const actual = authReducer(
       initialState,
-      setCredentials({ user, token: 'test-token' })
+      setCredentials({
+        user: mockUser,
+        token: mockToken,
+        refreshToken: mockRefreshToken,
+        lastLogin: MOCK_DATA.currentDateTime
+      })
     );
-    expect(actual.isAuthenticated).toEqual(true);
-    expect(actual.user).toEqual(user);
-    expect(actual.token).toEqual('test-token');
-    expect(actual.error).toBeNull();
+
+    expect(actual).toEqual({
+      isAuthenticated: true,
+      user: mockUser,
+      token: mockToken,
+      refreshToken: mockRefreshToken,
+      lastLogin: MOCK_DATA.currentDateTime,
+      loading: false,
+      error: null
+    });
   });
 
   it('should handle logout', () => {
-    const user: User = { 
-      id: 1, 
-      name: 'Test User',
-      role: 'user' 
+    const loggedInState: AuthState = {
+      isAuthenticated: true,
+      user: MOCK_DATA.currentUser,
+      token: mockToken,
+      refreshToken: mockRefreshToken,
+      lastLogin: MOCK_DATA.currentDateTime,
+      loading: false,
+      error: null
     };
-    const actual = authReducer(
-      { 
-        isAuthenticated: true, 
-        user, 
-        token: 'test-token',
-        loading: false,
-        error: null 
-      }, 
-      logout()
-    );
+
+    const actual = authReducer(loggedInState, logout());
     expect(actual).toEqual(initialState);
   });
 });

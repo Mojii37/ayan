@@ -1,44 +1,29 @@
 import '@testing-library/jest-dom';
-import { vi, expect } from 'vitest';
+import { vi, expect, afterEach, beforeEach } from 'vitest';
 import type { MockInstance } from 'vitest';
 
-// Precise type definitions for Jest-like mocking
-interface JestMock {
-  fn: <T extends (...args: any[]) => any>(implementation?: T) => MockInstance<Parameters<T>, ReturnType<T>>;
-  spyOn: typeof vi.spyOn;
-  mock: (moduleName: string) => any;
-  test: typeof vi.test;
-}
-
-// Extend global namespace
-declare global {
-  var jest: JestMock;
-}
-
-// Window.matchMedia mock with proper typing
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+// شبیه‌سازی window.matchMedia
+beforeEach(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
 });
 
-// Global Jest-like utilities with correct typing
-globalThis.jest = {
-  fn: vi.fn,
-  spyOn: vi.spyOn,
-  mock: (moduleName: string) => vi.mock(moduleName),
-  test: vi.test
-};
+// گسترش matcher های expect
+interface CustomMatchers<R = unknown> {
+  toBeInTheDocument(): R;
+}
 
-// Extended expect matcher
 expect.extend({
   toBeInTheDocument(received) {
     const pass = received != null && received !== false;
@@ -48,3 +33,9 @@ expect.extend({
     };
   },
 });
+
+// تعریف نوع برای matcher سفارشی
+declare module 'vitest' {
+  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers {}
+}

@@ -2,7 +2,7 @@ import type {
   ErrorLog, 
   ErrorSeverity, 
   ErrorSource, 
-  ErrorStatus, 
+  ErrorStatus,
   StoredError,
   ErrorContext 
 } from '../types/error';
@@ -17,13 +17,20 @@ export class ErrorService {
   }
 
   private static getSystemInfo(): ErrorContext {
+    const deviceType = /mobile/i.test(navigator.userAgent) 
+      ? 'mobile' 
+      : /tablet/i.test(navigator.userAgent)
+      ? 'tablet'
+      : 'desktop';
+
     return {
       browser: navigator.userAgent,
       os: navigator.platform,
-      deviceType: /mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+      deviceType,
       route: window.location.pathname,
       userId: localStorage.getItem('userId') || undefined,
       timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV as 'development' | 'production' | 'test'
     };
   }
 
@@ -32,15 +39,19 @@ export class ErrorService {
     const fullError: ErrorLog = {
       id: this.generateErrorId(),
       timestamp: new Date(),
-      severity: error.severity || 'error',
-      source: error.source || 'client',
+      severity: error.severity || ErrorSeverity.ERROR,
+      source: error.source || ErrorSource.CLIENT,
       message: error.message || 'Unknown error',
       stack: error.stack,
-      status: 'new',
+      status: ErrorStatus.NEW,
+      retryCount: 0,
+      maxRetries: this.MAX_RETRY_ATTEMPTS,
       context: {
         ...this.getSystemInfo(),
-        ...error.context,
+        ...error.context
       },
+      relatedErrors: error.relatedErrors || [],
+      tags: error.tags || []
     };
 
     while (attempts < this.MAX_RETRY_ATTEMPTS) {
@@ -77,6 +88,8 @@ export class ErrorService {
       const storedError: StoredError = {
         ...error,
         timestamp: error.timestamp.toISOString(),
+        lastRetryAt: error.lastRetryAt?.toISOString(),
+        resolvedAt: error.resolvedAt?.toISOString(),
       };
 
       storedErrors.push(storedError);
@@ -97,7 +110,9 @@ export class ErrorService {
         await this.logError({
           ...error,
           timestamp: new Date(error.timestamp),
-          status: 'pending'
+          lastRetryAt: error.lastRetryAt ? new Date(error.lastRetryAt) : undefined,
+          resolvedAt: error.resolvedAt ? new Date(error.resolvedAt) : undefined,
+          status: ErrorStatus.PENDING
         });
         successfulSyncs.push(error.id);
       } catch (err) {
@@ -115,12 +130,13 @@ export class ErrorService {
   static handleGlobalErrors(): void {
     window.onerror = (message, source, lineno, colno, error) => {
       this.logError({
-        severity: 'error',
-        source: 'client',
+        severity: ErrorSeverity.ERROR,
+        source: ErrorSource.CLIENT,
         message: message.toString(),
         stack: error?.stack,
-        status: 'new',
+        status: ErrorStatus.NEW,
         context: {
+          ...this.getSystemInfo(),
           source,
           line: lineno,
           column: colno,
@@ -131,12 +147,13 @@ export class ErrorService {
 
     window.addEventListener('unhandledrejection', (event) => {
       this.logError({
-        severity: 'error',
-        source: 'client',
+        severity: ErrorSeverity.ERROR,
+        source: ErrorSource.CLIENT,
         message: 'Unhandled Promise Rejection',
         stack: event.reason?.stack,
-        status: 'new',
+        status: ErrorStatus.NEW,
         context: {
+          ...this.getSystemInfo(),
           reason: event.reason,
           url: window.location.href,
         },
@@ -144,7 +161,6 @@ export class ErrorService {
     });
   }
 
-  // Helper method to update error status
   static async updateErrorStatus(
     errorId: string, 
     status: ErrorStatus

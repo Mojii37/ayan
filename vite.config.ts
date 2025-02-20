@@ -18,53 +18,63 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
       react({
         babel: {
           plugins: [
-            ['@babel/plugin-transform-runtime', { 
-              regenerator: true, 
-              corejs: 3 
-            }],
-            ['@emotion/babel-plugin', { 
-              sourceMap: isDevelopment, 
-              autoLabel: isDevelopment ? 'dev-only' : 'never'
-            }],
-          ],
-        },
+            [
+              '@babel/plugin-transform-runtime',
+              {
+                regenerator: true,
+                corejs: 3
+              }
+            ],
+            [
+              '@emotion/babel-plugin',
+              {
+                sourceMap: isDevelopment,
+                autoLabel: isDevelopment ? 'dev-only' : 'never'
+              }
+            ]
+          ]
+        }
       }),
-      mdx({ providerImportSource: '@mdx-js/react' }),
+      mdx({
+        providerImportSource: '@mdx-js/react'
+      }),
       eslintPlugin({
         cache: isDevelopment,
         fix: isDevelopment,
         include: ['src/**/*.{ts,tsx,js,jsx}'],
-        exclude: ['node_modules/**', 'dist/**'],
+        exclude: ['node_modules/**', 'dist/**']
       }),
       checker({
         typescript: {
           tsconfigPath: './tsconfig.json',
           root: '.',
-          buildMode: isProduction,
+          buildMode: isProduction
         },
         eslint: {
           lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
-          dev: { 
-            logLevel: isDevelopment ? ['error', 'warning'] : [] 
-          },
+          dev: {
+            logLevel: isDevelopment ? ['error', 'warning'] : []
+          }
         },
         enableBuild: true,
         overlay: {
           initialIsOpen: false,
-          position: 'br',
+          position: 'br'
         },
-        terminal: true,
+        terminal: true
       }),
-      ...(isProduction 
-        ? [visualizer({
-            filename: 'stats.html',
-            open: true,
-            gzipSize: true,
-            brotliSize: true,
-            template: 'treemap',
-            sourcemap: isDevelopment,
-          })] 
-        : []),
+      ...(isProduction
+        ? [
+            visualizer({
+              filename: 'stats.html',
+              open: true,
+              gzipSize: true,
+              brotliSize: true,
+              template: 'treemap',
+              sourcemap: isDevelopment
+            })
+          ]
+        : [])
     ],
 
     resolve: {
@@ -72,15 +82,31 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
         '@': path.resolve(__dirname, './src'),
         '@components': path.resolve(__dirname, './src/components'),
         '@utils': path.resolve(__dirname, './src/utils'),
+        '@store': path.resolve(__dirname, './src/store'),
+        '@hooks': path.resolve(__dirname, './src/hooks'),
+        '@services': path.resolve(__dirname, './src/services'),
+        '@types': path.resolve(__dirname, './src/types')
       },
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
+      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.mdx']
     },
 
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./src/jest.setup.ts'],
+      setupFiles: ['./src/setupTests.ts'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/',
+          'src/setupTests.ts',
+          '**/*.d.ts',
+          '**/*.test.{ts,tsx}',
+          '**/__mocks__/**'
+        ]
+      },
       css: true,
+      include: ['src/**/*.{test,spec}.{ts,tsx}']
     },
 
     define: {
@@ -88,7 +114,7 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
       ...Object.keys(env).reduce((acc, key) => {
         acc[`import.meta.env.${key}`] = JSON.stringify(env[key]);
         return acc;
-      }, {}),
+      }, {} as Record<string, string>)
     },
 
     build: {
@@ -99,19 +125,35 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
           manualChunks: {
             vendor: ['react', 'react-dom'],
             router: ['react-router-dom'],
-          },
-        },
+            mui: ['@mui/material', '@mui/icons-material'],
+            redux: ['@reduxjs/toolkit', 'react-redux']
+          }
+        }
       },
+      chunkSizeWarningLimit: 1000
     },
 
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react-router-dom'],
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@mui/material',
+        '@reduxjs/toolkit'
+      ]
     },
 
     server: {
       port: 3000,
       open: true,
       cors: true,
-    },
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL || 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false
+        }
+      }
+    }
   };
 });

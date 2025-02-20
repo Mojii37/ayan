@@ -26,9 +26,36 @@ export interface Content {
   readTime?: number;
   viewCount: number;
 }
-
-export interface Article extends Content {
+export interface Article {
+  id: string;
+  title: string;
+  content: string;
   excerpt: string;
+  thumbnail?: string;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface ArticleCategory {
+  id: string;
+  name: string;
+}
+
+export interface ArticlesResponse {
+  articles: Article[];
+  total: number;
+}
+
+export interface ArticleFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
 }
 
 export interface ArticleInput {

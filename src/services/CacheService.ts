@@ -2,6 +2,7 @@ import type { CachedData } from '../types/store.types';
 
 export class CacheService {
   private static instance: CacheService;
+  private readonly prefix = 'cache_';
 
   private constructor() {}
 
@@ -14,12 +15,12 @@ export class CacheService {
 
   getCachedItem<T = unknown>(key: string): CachedData<T> | undefined {
     try {
-      const item = localStorage.getItem(`cache_${key}`);
+      const item = localStorage.getItem(this.prefix + key);
       if (!item) return undefined;
 
       const cachedData = JSON.parse(item) as CachedData<T>;
       if (this.isExpired(cachedData)) {
-        this.removeCachedItem(key);
+        this.removeItem(key); // تغییر نام متد
         return undefined;
       }
 
@@ -45,7 +46,7 @@ export class CacheService {
         tags,
       };
 
-      localStorage.setItem(`cache_${key}`, JSON.stringify(cachedData));
+      localStorage.setItem(this.prefix + key, JSON.stringify(cachedData));
     } catch (error) {
       console.error('Error setting cached item:', error);
     }
@@ -57,7 +58,7 @@ export class CacheService {
       const now = Date.now();
 
       keys.forEach(key => {
-        if (key.startsWith('cache_')) {
+        if (key.startsWith(this.prefix)) {
           const item = localStorage.getItem(key);
           if (item) {
             const cachedData = JSON.parse(item) as CachedData<unknown>;
@@ -76,7 +77,7 @@ export class CacheService {
     try {
       const keys = Object.keys(localStorage);
       keys.forEach(key => {
-        if (key.startsWith('cache_')) {
+        if (key.startsWith(this.prefix)) {
           localStorage.removeItem(key);
         }
       });
@@ -85,16 +86,15 @@ export class CacheService {
     }
   }
 
-  private isExpired(cachedData: CachedData<unknown>): boolean {
-    return Date.now() > cachedData.expiresAt;
+  // تغییر نام متد از removeCachedItem به removeItem
+  removeItem(key: string): void {
+    localStorage.removeItem(this.prefix + key);
   }
 
-  private removeCachedItem(key: string): void {
-    localStorage.removeItem(`cache_${key}`);
+  private isExpired(cachedData: CachedData<unknown>): boolean {
+    return Date.now() > cachedData.expiresAt;
   }
 }
 
 export const cacheService = CacheService.getInstance();
-
-// Helper types for better type inference
 export type CacheServiceType = typeof cacheService;

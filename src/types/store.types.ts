@@ -1,8 +1,10 @@
 import type { User } from './user';
 
+// تعریف تایپ‌های پایه
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type SupportedLanguage = 'en' | 'fa' | 'ar';
 
+// تعریف state های اصلی
 export interface AuthState {
   user: User | null;
   token: string | null;
@@ -46,6 +48,7 @@ export interface UIState {
   };
 }
 
+// تعریف تایپ‌های مربوط به کش
 export interface CachedData<T = unknown> {
   data: T;
   expiresAt: number;
@@ -64,6 +67,7 @@ export type CacheKey =
   | 'recent-activities'
   | 'system-settings';
 
+// تعریف RootState
 export interface RootState {
   auth: AuthState;
   settings: SettingsState;

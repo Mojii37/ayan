@@ -1,105 +1,100 @@
+import axios from 'axios';
 import { 
   LoginCredentials, 
-  AuthResponse, 
-  AuthError, 
-  RegisterData,
-  RefreshTokenResponse 
+  RegisterCredentials, 
+  AuthResponse,
+  ResetPasswordCredentials 
 } from '../types/auth.types';
 
-export class AuthService {
-  private static baseUrl = import.meta.env.VITE_API_URL;
+class AuthService {
+  private static readonly API_URL = '/api/auth';
+  private static readonly TOKEN_KEY = 'auth_token';
+  private static readonly REFRESH_TOKEN_KEY = 'refresh_token';
 
+  // ذخیره توکن در localStorage
+  private static setTokens(token: string, refreshToken?: string) {
+    localStorage.setItem(this.TOKEN_KEY, token);
+    if (refreshToken) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+    }
+  }
+
+  // دریافت توکن از localStorage
+  static getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
+  // پاک کردن توکن‌ها
+  private static clearTokens() {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  // ورود کاربر
   static async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const errorData: AuthError = await response.json();
-        throw new Error(errorData.message || 'خطا در ورود');
-      }
-
-      return await response.json();
+      const response = await axios.post(`${this.API_URL}/login`, credentials);
+      const data = response.data as AuthResponse;
+      this.setTokens(data.token, data.refreshToken);
+      return data;
     } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : 'خطای نامشخص در فرآیند ورود'
-      );
+      throw this.handleError(error);
     }
   }
 
-  static async register(data: RegisterData): Promise<AuthResponse> {
+  // ثبت‌نام کاربر جدید
+  static async register(userData: RegisterCredentials): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData: AuthError = await response.json();
-        throw new Error(errorData.message || 'خطا در ثبت نام');
-      }
-
-      return await response.json();
+      const response = await axios.post(`${this.API_URL}/register`, userData);
+      const data = response.data as AuthResponse;
+      this.setTokens(data.token, data.refreshToken);
+      return data;
     } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : 'خطای نامشخص در فرآیند ثبت نام'
-      );
+      throw this.handleError(error);
     }
   }
 
-  static async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  // خروج از سیستم
+  static logout(): void {
+    this.clearTokens();
+  }
+
+  // بازیابی رمز عبور
+  static async resetPassword(data: ResetPasswordCredentials): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (!response.ok) {
-        const errorData: AuthError = await response.json();
-        throw new Error(errorData.message || 'خطا در بروزرسانی توکن');
-      }
-
-      return await response.json();
+      await axios.post(`${this.API_URL}/reset-password`, data);
     } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : 'خطای نامشخص در بروزرسانی توکن'
-      );
+      throw this.handleError(error);
     }
   }
 
-  static async logout(): Promise<void> {
+  // تازه‌سازی توکن
+  static async refreshAccessToken(): Promise<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/auth/logout`, {
-        method: 'POST',
-      });
+      const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+      if (!refreshToken) throw new Error('رفرش توکن موجود نیست');
 
-      if (!response.ok) {
-        const errorData: AuthError = await response.json();
-        throw new Error(errorData.message || 'خطا در خروج');
-      }
+      const response = await axios.post(`${this.API_URL}/refresh-token`, {
+        refreshToken
+      });
+      
+      const { token } = response.data;
+      localStorage.setItem(this.TOKEN_KEY, token);
+      return token;
     } catch (error) {
-      throw new Error(
-        error instanceof Error
-          ? error.message
-          : 'خطای نامشخص در فرآیند خروج'
-      );
+      this.clearTokens();
+      throw this.handleError(error);
     }
+  }
+
+  // مدیریت خطاها
+  private static handleError(error: any): Error {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || 'خطای ناشناخته رخ داد';
+      return new Error(message);
+    }
+    return error instanceof Error ? error : new Error('خطای ناشناخته رخ داد');
   }
 }
+
+export default AuthService;

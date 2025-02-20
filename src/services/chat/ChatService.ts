@@ -1,114 +1,100 @@
-import axios from 'axios';
-import { ErrorService } from '../ErrorService';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  ChatMessage,
   ChatResponse,
   ChatAction,
-  ChatServiceError,
-  ChatErrorLog
+  ChatServiceError
 } from '../../types/chat.types';
-import { ErrorSeverity, ErrorSource } from '../../types/error';
 
-export class ChatService {
-  private static readonly API_URL = '/api/chat';
-  
-  private static readonly TAX_KEYWORDS = [
-    'مالیات',
-    'محاسبه',
-    'درآمد',
-    'مالیاتی',
-  ] as const;
-  
-  private static readonly CONSULTATION_KEYWORDS = [
-    'مشاوره',
-    'وقت',
-    'رزرو',
-    'قرار',
-  ] as const;
-
-  private static createErrorLog(
-    error: Error,
-    context: Record<string, unknown>
-  ): ChatErrorLog {
-    return {
-      severity: ErrorSeverity.Error,
-      source: ErrorSource.Client,
-      message: error.message,
-      stack: error.stack,
-      context: {
-        component: 'ChatService',
-        ...context
-      }
-    };
-  }
-
-  private static matchesKeywords(message: string, keywords: readonly string[]): boolean {
-    const lowerMessage = message.toLowerCase();
-    return keywords.some(keyword => lowerMessage.includes(keyword));
-  }
-
-  static async sendMessage(message: string): Promise<ChatResponse> {
-    try {
-      if (process.env.NODE_ENV === 'production') {
-        const response = await axios.post<ChatResponse>(this.API_URL, { message });
-        return response.data;
-      } else {
-        return this.getMockResponse(message);
-      }
-    } catch (error) {
-      const chatError = new Error('خطا در سرویس چت') as ChatServiceError;
-      chatError.context = { originalMessage: message };
-
-      await ErrorService.logError(
-        this.createErrorLog(chatError, {
-          message,
-          originalError: error instanceof Error ? error.message : 'Unknown error'
-        })
-      );
-
-      throw chatError;
-    }
-  }
-
-  private static getMockResponse(message: string): ChatResponse {
-    const mockResponses: Record<string, ChatResponse> = {
-      tax: {
-        text: 'آیا مایل به محاسبه مالیات هستید؟',
-        suggestions: ['بله، محاسبه کن', 'خیر، سوال دیگری دارم'],
-        action: {
-          type: 'CALCULATE_TAX'
-        },
-      },
-      consultation: {
-        text: 'آیا می‌خواهید وقت مشاوره رزرو کنید؟',
-        suggestions: ['بله، رزرو کن', 'اطلاعات بیشتر'],
-        action: {
-          type: 'BOOK_CONSULTATION'
-        },
-      },
-      default: {
-        text: 'چطور می‌توانم کمکتان کنم؟',
-        suggestions: ['محاسبه مالیات', 'رزرو مشاوره', 'سوالات متداول'],
-      },
-    };
-
-    if (this.matchesKeywords(message, this.TAX_KEYWORDS)) {
-      return mockResponses.tax;
-    }
-
-    if (this.matchesKeywords(message, this.CONSULTATION_KEYWORDS)) {
-      return mockResponses.consultation;
-    }
-
-    return mockResponses.default;
-  }
+// نوع استیت چت
+interface ChatState {
+  currentResponse?: ChatResponse;
+  loading: boolean;
+  error?: string;
 }
 
-export const isChatResponse = (response: unknown): response is ChatResponse => {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'text' in response &&
-    typeof response.text === 'string'
-  );
+// تابع اولیه استیت
+const initialState: ChatState = {
+  loading: false,
 };
+
+// کلمات کلیدی
+const TAX_KEYWORDS = [
+  'مالیات',
+  'محاسبه',
+  'درآمد',
+  'مالیاتی',
+] as const;
+
+const CONSULTATION_KEYWORDS = [
+  'مشاوره',
+  'وقت',
+  'رزرو',
+  'قرار',
+] as const;
+
+// تابع تطبیق کلمات کلیدی
+const matchesKeywords = (message: string, keywords: readonly string[]): boolean => {
+  const lowerMessage = message.toLowerCase();
+  return keywords.some(keyword => lowerMessage.includes(keyword));
+};
+
+// اسلایس چت
+const chatSlice = createSlice({
+  name: 'chat',
+  initialState,
+  reducers: {
+    sendMessage: {
+      reducer: (state, action: PayloadAction<string>) => {
+        const message = action.payload;
+        state.loading = true;
+        state.error = undefined;
+
+        try {
+          state.currentResponse = getMockResponse(message);
+          state.loading = false;
+        } catch (error) {
+          state.loading = false;
+          state.error = error instanceof Error ? error.message : 'خطای ناشناخته';
+        }
+      },
+      prepare: (message: string) => ({ payload: message })
+    }
+  }
+});
+
+// پاسخ‌های موک
+const getMockResponse = (message: string): ChatResponse => {
+  const mockResponses = {
+    tax: {
+      text: 'آیا مایل به محاسبه مالیات هستید؟',
+      suggestions: ['بله، محاسبه کن', 'خیر، سوال دیگری دارم'],
+      action: {
+        type: 'CALCULATE_TAX'
+      }
+    },
+    consultation: {
+      text: 'آیا می‌خواهید وقت مشاوره رزرو کنید؟',
+      suggestions: ['بله، رزرو کن', 'اطلاعات بیشتر'],
+      action: {
+        type: 'BOOK_CONSULTATION'
+      }
+    },
+    default: {
+      text: 'چطور می‌توانم کمکتان کنم؟',
+      suggestions: ['محاسبه مالیات', 'رزرو مشاوره', 'سوالات متداول'],
+    },
+  };
+
+  if (matchesKeywords(message, TAX_KEYWORDS)) {
+    return mockResponses.tax;
+  }
+
+  if (matchesKeywords(message, CONSULTATION_KEYWORDS)) {
+    return mockResponses.consultation;
+  }
+
+  return mockResponses.default;
+};
+
+export const { sendMessage } = chatSlice.actions;
+export default chatSlice.reducer;

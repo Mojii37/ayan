@@ -12,11 +12,12 @@ export enum ErrorSource {
   CLIENT = 'client',
   SERVER = 'server',
   NETWORK = 'network',
-  VALIDATION = 'validation', 
+  VALIDATION = 'validation',
   DATABASE = 'database',
   AUTHENTICATION = 'authentication',
   AUTHORIZATION = 'authorization',
   EXTERNAL_SERVICE = 'external_service',
+  CHAT = 'chat',
   UNKNOWN = 'unknown'
 }
 
@@ -46,7 +47,7 @@ export interface ErrorContext extends SystemInfo {
   component?: string;
   timestamp: string;
   userId?: string;
-  sessionId?: string;
+  sessionId?: string;  
   route?: string;
   requestId?: string;
   environment: 'development' | 'production' | 'test';
@@ -91,45 +92,14 @@ export interface ErrorBoundaryState {
   errorInfo?: React.ErrorInfo;
 }
 
-export interface ErrorDetails {
-  message: string;
-  code: number;
-  status: ErrorStatus;
-  severity: ErrorSeverity;
-  source: ErrorSource;
-  timestamp: string;
-  data?: Record<string, unknown>;
-  suggestions?: string[];
-  debugInfo?: {
-    requestId?: string;
-    errorId?: string;
-    stack?: string;
+export interface ErrorResponse {
+  success: boolean;
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
   };
 }
-
-export interface StoredError extends Omit<ErrorLog, 'timestamp' | 'lastRetryAt' | 'resolvedAt'> {
-  timestamp: string;
-  lastRetryAt?: string;
-  resolvedAt?: string;
-}
-
-export interface ErrorResponse {
-  success: false;
-  error: ErrorDetails;
-}
-
-export interface ErrorServiceConfig {
-  maxRetries: number;
-  retryDelay: number;
-  logEndpoint: string;
-  environment: string;
-  version: string;
-  debug?: boolean;
-  tags?: string[];
-  ignoredErrors?: string[];
-}
-
-export type ErrorHandler = (error: Error, errorInfo?: React.ErrorInfo) => void;
 
 export const isErrorResponse = (response: unknown): response is ErrorResponse => {
   return (
@@ -141,7 +111,7 @@ export const isErrorResponse = (response: unknown): response is ErrorResponse =>
   );
 };
 
-export const isStoredError = (error: unknown): error is StoredError => {
+export const isErrorLog = (error: unknown): error is ErrorLog => {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -149,6 +119,13 @@ export const isStoredError = (error: unknown): error is StoredError => {
     'timestamp' in error &&
     'severity' in error &&
     'source' in error &&
-    'message' in error
+    'message' in error &&
+    'status' in error
   );
 };
+
+export type ErrorHandler = (error: Error, errorInfo?: React.ErrorInfo) => void;
+export type ErrorLogger = (log: ErrorLog) => Promise<void>;
+
+export const DEFAULT_MAX_RETRIES = 3;
+export const DEFAULT_RETRY_DELAY = 1000;

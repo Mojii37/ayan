@@ -8,7 +8,9 @@ export interface User {
   role: 'admin' | 'user';
   firstName?: string;
   lastName?: string;
+  name: string;
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+  lastLogin?: string;
 }

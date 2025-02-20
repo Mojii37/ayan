@@ -1,36 +1,44 @@
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
+import { render, RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { renderHook } from '@testing-library/react-hooks';
 import { configureStore } from '@reduxjs/toolkit';
-import rootReducer from './slices';
+import React from 'react';
 
-// تنظیمات تست
+// ایجاد یک reducer موقت
+const tempReducer = (state = {}) => state;
+
 const store = configureStore({
-  reducer: rootReducer,
+  reducer: tempReducer,
 });
 
-// کامپوننتی برای رندر کردن با فراهم‌کنندگان
-export const renderWithProviders = (ui: React.ReactElement, { route = '/' } = {}) => {
-  window.history.pushState({}, 'Test page', route);
+type CustomRenderOptions = {
+  route?: string;
+} & Omit<RenderOptions, 'wrapper'>;
 
-  return render(
+const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
     <Provider store={store}>
       <BrowserRouter>
-        {ui}
+        {children}
       </BrowserRouter>
     </Provider>
   );
 };
 
-// هوک برای رندر کردن با فراهم‌کنندگان
-export const renderHookWithProviders = (hook: () => unknown) => {
-  return renderHook(() => hook(), {
-    wrapper: ({ children }) => (
-      <Provider store={store}>
-        {children}
-      </Provider>
-    ),
-  });
+export const renderWithProviders = (
+  ui: React.ReactElement,
+  options: CustomRenderOptions = {}
+) => {
+  const { route = '/', ...renderOptions } = options;
+
+  window.history.pushState({}, 'Test page', route);
+
+  return render(ui, { wrapper: AllTheProviders, ...renderOptions });
 };
+
+// این خط را حذف کردیم چون به نظر می‌رسد مشکل‌ساز بود
+// export const renderHookWithProviders = ...
+
+// نسخه‌ای از رندر با provider‌ها
+export { renderWithProviders as render };

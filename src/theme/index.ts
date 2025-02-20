@@ -1,8 +1,8 @@
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 import { faIR } from '@mui/material/locale';
-import createCache from '@emotion/cache';
-import rtlPlugin from 'stylis-plugin-rtl';
-import { prefixer } from 'stylis';
+
+// Import cache from separate file
+import cacheRtl from '../utils/rtl-cache';
 
 // Extend MUI theme types
 declare module '@mui/material/styles' {
@@ -12,126 +12,157 @@ declare module '@mui/material/styles' {
   interface PaletteOptions {
     gold?: PaletteOptions['primary'];
   }
+  interface TypeBackground {
+    darker?: string;
+    overlay?: string;
+  }
 }
 
-// RTL configuration
-export const cacheRtl = createCache({
-  key: 'muirtl',
-  stylisPlugins: [prefixer, rtlPlugin],
-  prepend: true,
-});
-
-// Color palette types
-interface DarkGoldPalette {
+// Custom palette interface
+interface CustomPalette {
   gold: {
     main: string;
     light: string;
     dark: string;
+    darker: string;
     contrastText: string;
+    shine: string;
   };
   background: {
     default: string;
     paper: string;
+    darker: string;
+    overlay: string;
   };
   text: {
     primary: string;
     secondary: string;
+    gold: string;
   };
 }
 
-// Dark gold color palette
-const darkGold: DarkGoldPalette = {
+// Theme colors
+const colors: CustomPalette = {
   gold: {
     main: '#FFD700',
     light: '#FFE144',
     dark: '#B8860B',
+    darker: '#8B6914',
     contrastText: '#000000',
+    shine: 'linear-gradient(45deg, #FFD700 30%, #FDB931 90%)',
   },
   background: {
-    default: '#121212',
-    paper: '#1E1E1E',
+    default: '#0A0A0A',
+    paper: '#121212',
+    darker: '#000000',
+    overlay: 'rgba(0, 0, 0, 0.8)',
   },
   text: {
     primary: '#FFD700',
     secondary: '#B8860B',
+    gold: '#FFE144',
   },
 };
 
-// Theme configuration
+// [بقیه کد بدون تغییر]
+
+// Export
+export { cacheRtl, colors as themeColors };
+export type AppTheme = typeof theme;
+export const theme = createTheme(themeOptions, faIR);
+// Common component styles
+const commonStyles = {
+  borderRadius: 8,
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  goldBorder: `1px solid ${colors.gold.dark}`,
+  goldGlow: `0 0 10px ${colors.gold.main}40`,
+  goldGradient: colors.gold.shine,
+};
+
+// Theme options
 const themeOptions: ThemeOptions = {
   direction: 'rtl',
   typography: {
     fontFamily: 'IRANSans, Vazirmatn, Arial, sans-serif',
-    h1: { color: darkGold.gold.main },
-    h2: { color: darkGold.gold.main },
-    h3: { color: darkGold.gold.main },
-    h4: { color: darkGold.gold.main },
-    h5: { color: darkGold.gold.main },
-    h6: { color: darkGold.gold.main },
+    h1: { color: colors.gold.main, fontWeight: 700 },
+    h2: { color: colors.gold.main, fontWeight: 700 },
+    h3: { color: colors.gold.main, fontWeight: 600 },
+    h4: { color: colors.gold.main, fontWeight: 600 },
+    h5: { color: colors.gold.main, fontWeight: 500 },
+    h6: { color: colors.gold.main, fontWeight: 500 },
   },
   palette: {
     mode: 'dark',
     primary: {
-      main: darkGold.gold.main,
-      light: darkGold.gold.light,
-      dark: darkGold.gold.dark,
-      contrastText: darkGold.gold.contrastText,
+      main: colors.gold.main,
+      light: colors.gold.light,
+      dark: colors.gold.dark,
+      contrastText: colors.gold.contrastText,
     },
     secondary: {
-      main: '#B8860B',
-      light: '#DAA520',
-      dark: '#8B6914',
+      main: colors.gold.dark,
+      light: colors.gold.main,
+      dark: colors.gold.darker,
       contrastText: '#ffffff',
     },
-    background: darkGold.background,
-    text: darkGold.text,
-    gold: darkGold.gold,
+    background: colors.background,
+    text: colors.text,
+    gold: colors.gold,
+  },
+  shape: {
+    borderRadius: commonStyles.borderRadius,
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
+          background: colors.background.default,
+          color: colors.text.primary,
           scrollbarWidth: 'thin',
-          scrollbarColor: `${darkGold.gold.main} ${darkGold.background.default}`,
+          scrollbarColor: `${colors.gold.main} ${colors.background.default}`,
           '&::-webkit-scrollbar': {
             width: 8,
             height: 8,
           },
           '&::-webkit-scrollbar-track': {
-            background: darkGold.background.default,
+            background: colors.background.darker,
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: darkGold.gold.main,
+            backgroundColor: colors.gold.dark,
             borderRadius: 4,
             '&:hover': {
-              backgroundColor: darkGold.gold.dark,
+              backgroundColor: colors.gold.main,
+              boxShadow: commonStyles.goldGlow,
             },
           },
         },
       },
     },
     MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
       styleOverrides: {
         root: {
-          fontWeight: 'bold',
-          borderRadius: 8,
-          '&:hover': {
-            backgroundColor: darkGold.gold.dark,
-          },
+          ...commonStyles,
+          fontWeight: 700,
+          letterSpacing: 1,
         },
         contained: {
-          backgroundColor: darkGold.gold.main,
-          color: darkGold.gold.contrastText,
+          background: commonStyles.goldGradient,
+          color: colors.gold.contrastText,
           '&:hover': {
-            backgroundColor: darkGold.gold.dark,
+            background: colors.gold.dark,
+            boxShadow: commonStyles.goldGlow,
           },
         },
         outlined: {
-          borderColor: darkGold.gold.main,
-          color: darkGold.gold.main,
+          borderColor: colors.gold.dark,
+          color: colors.gold.main,
           '&:hover': {
-            borderColor: darkGold.gold.light,
-            backgroundColor: 'rgba(255, 215, 0, 0.04)',
+            borderColor: colors.gold.main,
+            backgroundColor: 'rgba(255, 215, 0, 0.08)',
+            boxShadow: commonStyles.goldGlow,
           },
         },
       },
@@ -139,17 +170,24 @@ const themeOptions: ThemeOptions = {
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: darkGold.background.paper,
-          borderRadius: 8,
-          border: `1px solid ${darkGold.gold.dark}`,
+          ...commonStyles,
+          backgroundColor: colors.background.paper,
+          border: commonStyles.goldBorder,
+          '&:hover': {
+            boxShadow: commonStyles.goldGlow,
+          },
         },
       },
     },
     MuiAppBar: {
+      defaultProps: {
+        elevation: 0,
+      },
       styleOverrides: {
         root: {
-          backgroundColor: darkGold.background.paper,
-          borderBottom: `1px solid ${darkGold.gold.dark}`,
+          backgroundColor: colors.background.darker,
+          borderBottom: commonStyles.goldBorder,
+          backdropFilter: 'blur(8px)',
         },
       },
     },
@@ -162,53 +200,76 @@ const themeOptions: ThemeOptions = {
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: darkGold.gold.dark,
+              borderColor: colors.gold.dark,
+              transition: commonStyles.transition,
             },
             '&:hover fieldset': {
-              borderColor: darkGold.gold.main,
+              borderColor: colors.gold.main,
+              boxShadow: commonStyles.goldGlow,
             },
             '&.Mui-focused fieldset': {
-              borderColor: darkGold.gold.light,
+              borderColor: colors.gold.light,
+              boxShadow: commonStyles.goldGlow,
             },
           },
           '& .MuiInputLabel-root': {
-            color: darkGold.text.secondary,
+            color: colors.text.secondary,
             '&.Mui-focused': {
-              color: darkGold.gold.main,
+              color: colors.gold.main,
             },
           },
         },
       },
     },
     MuiPaper: {
+      defaultProps: {
+        elevation: 0,
+      },
       styleOverrides: {
         root: {
-          backgroundColor: darkGold.background.paper,
+          backgroundColor: colors.background.paper,
           backgroundImage: 'none',
+          '&:hover': {
+            boxShadow: commonStyles.goldGlow,
+          },
         },
       },
     },
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: darkGold.gold.dark,
+          borderColor: colors.gold.dark,
+          '&::before, &::after': {
+            borderColor: colors.gold.dark,
+          },
         },
       },
     },
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: darkGold.gold.main,
+          color: colors.gold.main,
+          transition: commonStyles.transition,
           '&:hover': {
-            backgroundColor: 'rgba(255, 215, 0, 0.04)',
+            backgroundColor: 'rgba(255, 215, 0, 0.08)',
+            boxShadow: commonStyles.goldGlow,
           },
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: colors.background.overlay,
+          border: commonStyles.goldBorder,
+          color: colors.gold.main,
+          boxShadow: commonStyles.goldGlow,
         },
       },
     },
   },
 };
 
-// Create and export theme
-export const theme = createTheme(themeOptions, faIR);
-
+export { cacheRtl, colors as themeColors };
 export type AppTheme = typeof theme;
+export const theme = createTheme(themeOptions, faIR);
