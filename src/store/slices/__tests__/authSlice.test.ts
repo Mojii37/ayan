@@ -1,17 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import authReducer, { setCredentials, logout } from '../authSlice';
-import type { User, AuthState } from '../../../types/auth.types';
-import { MOCK_DATA, mockToken, mockRefreshToken } from '../../../utils/mockData';
+import authReducer, { setCredentials, logout } from './authSlice';
+import type { AuthState } from '@/types/auth.types';
+import { MOCK_DATA } from '@/mocks/auth.mock';
 
 describe('authSlice', () => {
   const initialState: AuthState = {
-    isAuthenticated: false,
     user: null,
-    token: null,
-    refreshToken: null,
-    lastLogin: null,
+    tokens: null,
+    isAuthenticated: false,
     loading: false,
-    error: null
+    error: null,
+    lastLogin: null
   };
 
   it('should handle initial state', () => {
@@ -19,25 +18,25 @@ describe('authSlice', () => {
   });
 
   it('should handle setCredentials', () => {
-    const mockUser: User = {
-      ...MOCK_DATA.currentUser
-    };
-
     const actual = authReducer(
       initialState,
       setCredentials({
-        user: mockUser,
-        token: mockToken,
-        refreshToken: mockRefreshToken,
+        user: MOCK_DATA.currentUser,
+        tokens: {
+          accessToken: MOCK_DATA.mockToken,
+          refreshToken: MOCK_DATA.mockRefreshToken
+        },
         lastLogin: MOCK_DATA.currentDateTime
       })
     );
 
     expect(actual).toEqual({
       isAuthenticated: true,
-      user: mockUser,
-      token: mockToken,
-      refreshToken: mockRefreshToken,
+      user: MOCK_DATA.currentUser,
+      tokens: {
+        accessToken: MOCK_DATA.mockToken,
+        refreshToken: MOCK_DATA.mockRefreshToken
+      },
       lastLogin: MOCK_DATA.currentDateTime,
       loading: false,
       error: null
@@ -48,8 +47,10 @@ describe('authSlice', () => {
     const loggedInState: AuthState = {
       isAuthenticated: true,
       user: MOCK_DATA.currentUser,
-      token: mockToken,
-      refreshToken: mockRefreshToken,
+      tokens: {
+        accessToken: MOCK_DATA.mockToken,
+        refreshToken: MOCK_DATA.mockRefreshToken
+      },
       lastLogin: MOCK_DATA.currentDateTime,
       loading: false,
       error: null

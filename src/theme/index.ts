@@ -1,24 +1,8 @@
-import { createTheme, ThemeOptions } from '@mui/material/styles';
+import { createTheme, type ThemeOptions } from '@mui/material/styles';
 import { faIR } from '@mui/material/locale';
+import { rtlCache } from '../utils/rtl';
+import { type CustomThemeColors } from '../types/theme';
 
-// Import cache from separate file
-import cacheRtl from '../utils/rtl-cache';
-
-// Extend MUI theme types
-declare module '@mui/material/styles' {
-  interface Palette {
-    gold: Palette['primary'];
-  }
-  interface PaletteOptions {
-    gold?: PaletteOptions['primary'];
-  }
-  interface TypeBackground {
-    darker?: string;
-    overlay?: string;
-  }
-}
-
-// Custom palette interface
 interface CustomPalette {
   gold: {
     main: string;
@@ -41,8 +25,7 @@ interface CustomPalette {
   };
 }
 
-// Theme colors
-const colors: CustomPalette = {
+const colors: CustomThemeColors = {
   gold: {
     main: '#FFD700',
     light: '#FFE144',
@@ -56,30 +39,19 @@ const colors: CustomPalette = {
     paper: '#121212',
     darker: '#000000',
     overlay: 'rgba(0, 0, 0, 0.8)',
-  },
-  text: {
-    primary: '#FFD700',
-    secondary: '#B8860B',
-    gold: '#FFE144',
-  },
+  }
 };
 
-// [بقیه کد بدون تغییر]
 
-// Export
-export { cacheRtl, colors as themeColors };
-export type AppTheme = typeof theme;
-export const theme = createTheme(themeOptions, faIR);
-// Common component styles
+
 const commonStyles = {
   borderRadius: 8,
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   goldBorder: `1px solid ${colors.gold.dark}`,
   goldGlow: `0 0 10px ${colors.gold.main}40`,
   goldGradient: colors.gold.shine,
-};
+} as const;
 
-// Theme options
 const themeOptions: ThemeOptions = {
   direction: 'rtl',
   typography: {
@@ -108,9 +80,6 @@ const themeOptions: ThemeOptions = {
     background: colors.background,
     text: colors.text,
     gold: colors.gold,
-  },
-  shape: {
-    borderRadius: commonStyles.borderRadius,
   },
   components: {
     MuiCssBaseline: {
@@ -179,52 +148,8 @@ const themeOptions: ThemeOptions = {
         },
       },
     },
-    MuiAppBar: {
-      defaultProps: {
-        elevation: 0,
-      },
-      styleOverrides: {
-        root: {
-          backgroundColor: colors.background.darker,
-          borderBottom: commonStyles.goldBorder,
-          backdropFilter: 'blur(8px)',
-        },
-      },
-    },
-    MuiTextField: {
-      defaultProps: {
-        variant: 'outlined',
-        fullWidth: true,
-      },
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            '& fieldset': {
-              borderColor: colors.gold.dark,
-              transition: commonStyles.transition,
-            },
-            '&:hover fieldset': {
-              borderColor: colors.gold.main,
-              boxShadow: commonStyles.goldGlow,
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: colors.gold.light,
-              boxShadow: commonStyles.goldGlow,
-            },
-          },
-          '& .MuiInputLabel-root': {
-            color: colors.text.secondary,
-            '&.Mui-focused': {
-              color: colors.gold.main,
-            },
-          },
-        },
-      },
-    },
     MuiPaper: {
-      defaultProps: {
-        elevation: 0,
-      },
+      defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
           backgroundColor: colors.background.paper,
@@ -235,41 +160,9 @@ const themeOptions: ThemeOptions = {
         },
       },
     },
-    MuiDivider: {
-      styleOverrides: {
-        root: {
-          borderColor: colors.gold.dark,
-          '&::before, &::after': {
-            borderColor: colors.gold.dark,
-          },
-        },
-      },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          color: colors.gold.main,
-          transition: commonStyles.transition,
-          '&:hover': {
-            backgroundColor: 'rgba(255, 215, 0, 0.08)',
-            boxShadow: commonStyles.goldGlow,
-          },
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: colors.background.overlay,
-          border: commonStyles.goldBorder,
-          color: colors.gold.main,
-          boxShadow: commonStyles.goldGlow,
-        },
-      },
-    },
   },
 };
 
-export { cacheRtl, colors as themeColors };
-export type AppTheme = typeof theme;
 export const theme = createTheme(themeOptions, faIR);
+export type AppTheme = typeof theme;
+export { colors as themeColors, rtlCache };

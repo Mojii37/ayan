@@ -10,7 +10,6 @@ import type { ConfigEnv, UserConfig } from 'vite';
 export default defineConfig((configEnv: ConfigEnv): UserConfig => {
   const { mode } = configEnv;
   const isDevelopment = mode === 'development';
-  const isProduction = mode === 'production';
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
@@ -18,63 +17,31 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
       react({
         babel: {
           plugins: [
-            [
-              '@babel/plugin-transform-runtime',
-              {
-                regenerator: true,
-                corejs: 3
-              }
-            ],
-            [
-              '@emotion/babel-plugin',
-              {
-                sourceMap: isDevelopment,
-                autoLabel: isDevelopment ? 'dev-only' : 'never'
-              }
-            ]
+            ['@emotion/babel-plugin', {
+              sourceMap: isDevelopment,
+              autoLabel: isDevelopment ? 'dev-only' : 'never'
+            }]
           ]
         }
       }),
-      mdx({
-        providerImportSource: '@mdx-js/react'
-      }),
+      mdx(),
       eslintPlugin({
         cache: isDevelopment,
-        fix: isDevelopment,
-        include: ['src/**/*.{ts,tsx,js,jsx}'],
+        include: ['src/**/*.{ts,tsx}'],
         exclude: ['node_modules/**', 'dist/**']
       }),
       checker({
-        typescript: {
-          tsconfigPath: './tsconfig.json',
-          root: '.',
-          buildMode: isProduction
-        },
+        typescript: true,
         eslint: {
-          lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
-          dev: {
-            logLevel: isDevelopment ? ['error', 'warning'] : []
-          }
+          lintCommand: 'eslint "./src/**/*.{ts,tsx}"'
         },
-        enableBuild: true,
-        overlay: {
-          initialIsOpen: false,
-          position: 'br'
-        },
-        terminal: true
+        overlay: false
       }),
-      ...(isProduction
-        ? [
-            visualizer({
-              filename: 'stats.html',
-              open: true,
-              gzipSize: true,
-              brotliSize: true,
-              template: 'treemap',
-              sourcemap: isDevelopment
-            })
-          ]
-        : [])
+      visualizer({
+        filename: 'stats.html',
+        gzipSize: true,
+        template: 'treemap'
+      })
     ],
 
     resolve: {
@@ -86,72 +53,29 @@ export default defineConfig((configEnv: ConfigEnv): UserConfig => {
         '@hooks': path.resolve(__dirname, './src/hooks'),
         '@services': path.resolve(__dirname, './src/services'),
         '@types': path.resolve(__dirname, './src/types')
-      },
-      extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.mdx']
-    },
-
-    test: {
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: ['./src/setupTests.ts'],
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'json', 'html'],
-        exclude: [
-          'node_modules/',
-          'src/setupTests.ts',
-          '**/*.d.ts',
-          '**/*.test.{ts,tsx}',
-          '**/__mocks__/**'
-        ]
-      },
-      css: true,
-      include: ['src/**/*.{test,spec}.{ts,tsx}']
-    },
-
-    define: {
-      'process.env.NODE_ENV': JSON.stringify(mode),
-      ...Object.keys(env).reduce((acc, key) => {
-        acc[`import.meta.env.${key}`] = JSON.stringify(env[key]);
-        return acc;
-      }, {} as Record<string, string>)
+      }
     },
 
     build: {
-      target: 'es2015',
       sourcemap: isDevelopment,
       rollupOptions: {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom'],
-            router: ['react-router-dom'],
-            mui: ['@mui/material', '@mui/icons-material'],
+            mui: ['@mui/material'],
             redux: ['@reduxjs/toolkit', 'react-redux']
           }
         }
-      },
-      chunkSizeWarningLimit: 1000
-    },
-
-    optimizeDeps: {
-      include: [
-        'react',
-        'react-dom',
-        'react-router-dom',
-        '@mui/material',
-        '@reduxjs/toolkit'
-      ]
+      }
     },
 
     server: {
       port: 3000,
       open: true,
-      cors: true,
       proxy: {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:8080',
-          changeOrigin: true,
-          secure: false
+          changeOrigin: true
         }
       }
     }

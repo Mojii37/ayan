@@ -1,140 +1,45 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Box, 
-  Typography, 
-  Container, 
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import {
   Grid,
-  CircularProgress,
-  Alert,
   Card,
   CardContent,
-  Button
+  Typography,
+  CardActionArea,
+  CircularProgress
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import { useNavigate } from 'react-router-dom';
-import { 
-  fetchArticles, 
-  deleteArticle,
-  selectAllArticles,
-  selectArticleStatus,
-  selectArticleError
-} from '../../store/slices/articlesSlice';
-import type { AppDispatch } from '../../store/store';
+import { articleService } from '@/services/articleService';
 
-const Articles: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const articles = useSelector(selectAllArticles);
-  const status = useSelector(selectArticleStatus);
-  const errorMessage = useSelector(selectArticleError);
-  const navigate = useNavigate();
+export default function ArticlesList() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['articles'],
+    queryFn: () => articleService.getArticles({ status: 'published' })
+  });
 
-  useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchArticles());
-    }
-  }, [status, dispatch]);
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('آیا از حذف این مقاله اطمینان دارید؟')) {
-      try {
-        await dispatch(deleteArticle(id)).unwrap();
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error 
-          ? error.message 
-          : 'خطا در حذف مقاله';
-        alert(errorMessage);
-      }
-    }
-  };
-
-  if (status === 'loading') {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (status === 'failed' && errorMessage) {
-    return (
-      <Alert severity="error" sx={{ m: 2 }}>
-        {errorMessage}
-      </Alert>
-    );
-  }
+  if (isLoading) return <CircularProgress />;
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          mb: 4 
-        }}>
-          <Typography variant="h5">مدیریت مقالات</Typography>
-          <Button 
-            variant="contained" 
-            onClick={() => navigate('/admin/articles/new')}
-          >
-            مقاله جدید
-          </Button>
-        </Box>
-        
-        <Grid container spacing={3}>
-          {articles.map((article) => (
-            <Grid item xs={12} sm={6} md={4} key={article.id}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Typography gutterBottom variant="h6">
-                    {article.title}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      mb: 2
-                    }}
-                  >
-                    {article.content}
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      onClick={() => navigate(`/admin/articles/${article.id}/edit`)}
-                    >
-                      ویرایش
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDelete(article.id)}
-                    >
-                      حذف
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+    <Grid container spacing={3}>
+      {data?.articles.map(article => (
+        <Grid item xs={12} sm={6} md={4} key={article.id}>
+          <Card>
+            <CardActionArea component={Link} to={`/articles/${article.id}`}>
+              <CardContent>
+                <Typography gutterBottom variant="h6" noWrap>
+                  {article.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {article.excerpt || article.content.substring(0, 100)}...
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  {new Date(article.createdAt).toLocaleDateString('fa-IR')}
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
         </Grid>
-
-        {articles.length === 0 && (
-          <Typography textAlign="center" color="text.secondary" mt={4}>
-            مقاله‌ای یافت نشد
-          </Typography>
-        )}
-      </Box>
-    </Container>
+      ))}
+    </Grid>
   );
-};
-
-export default Articles;
+}

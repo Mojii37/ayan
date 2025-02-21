@@ -6,7 +6,7 @@ import AdminLayout from '../layouts/AdminLayout';
 // Lazy load components
 const Dashboard = lazy(() => import('../pages/admin/Dashboard'));
 const Articles = lazy(() => import('../pages/admin/Articles'));
-const ArticleForm = lazy(() => import('../pages/admin/ArticleForm'));
+const ArticleForm = lazy(() => import('../pages/admin/Article/Form'));
 const Users = lazy(() => import('../pages/admin/Users'));
 const Settings = lazy(() => import('../pages/admin/Settings'));
 

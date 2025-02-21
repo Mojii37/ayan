@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderWithProviders } from '../setupTests';
 import App from '../App';
 import '@testing-library/jest-dom';
+import React from 'react';
 
 describe('App Component', () => {
   const testDate = new Date('2025-02-15T10:03:00Z');
@@ -16,11 +17,11 @@ describe('App Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders without crashing', () => {
-    const { container } = renderWithProviders(<App />, { route: '/' });
-    expect(container).toBeInTheDocument();
-  });
 
+  it('renders without crashing', () => {
+      const { container } = renderWithProviders(<App />, { route: '/' });
+      expect(container).toBeInTheDocument();
+    });
   it('renders with correct layout structure', () => {
     const { getByTestId } = renderWithProviders(<App />, { route: '/' });
     

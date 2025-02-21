@@ -1,7 +1,10 @@
 import '@emotion/react';
+import type { Theme as MuiTheme } from '@mui/material/styles';
 
 declare module '@emotion/react' {
-  export interface Theme {
+  export interface Theme extends MuiTheme {}
+}
+  export interface Theme extends MuiTheme {
     palette: {
       gold: {
         main: string;
@@ -24,4 +27,3 @@ declare module '@emotion/react' {
       };
     };
   }
-}

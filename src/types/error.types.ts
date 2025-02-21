@@ -1,4 +1,12 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, type ErrorInfo } from 'react';
+
+export interface ErrorBoundaryProps {
+    children: ReactNode;
+    fallback?: ReactNode | ((error: Error, resetError: () => void) => ReactNode);
+  }
+
+
+
 
 export enum ErrorSeverity {
   INFO = 'info',
@@ -47,7 +55,7 @@ export interface ErrorContext extends SystemInfo {
   component?: string;
   timestamp: string;
   userId?: string;
-  sessionId?: string;  
+  sessionId?: string;
   route?: string;
   requestId?: string;
   environment: 'development' | 'production' | 'test';
@@ -77,52 +85,6 @@ export interface ErrorLog {
   relatedErrors?: string[];
   tags?: string[];
 }
-
-export interface ErrorBoundaryProps {
-  children: ReactNode;
-  fallback?: ReactNode | ((error: Error, resetError: () => void) => ReactNode);
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-  resetOnPropsChange?: boolean;
-  resetOnRouteChange?: boolean;
-}
-
-export interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: React.ErrorInfo;
-}
-
-export interface ErrorResponse {
-  success: boolean;
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
-
-export const isErrorResponse = (response: unknown): response is ErrorResponse => {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'success' in response &&
-    !response.success &&
-    'error' in response
-  );
-};
-
-export const isErrorLog = (error: unknown): error is ErrorLog => {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'id' in error &&
-    'timestamp' in error &&
-    'severity' in error &&
-    'source' in error &&
-    'message' in error &&
-    'status' in error
-  );
-};
 
 export type ErrorHandler = (error: Error, errorInfo?: React.ErrorInfo) => void;
 export type ErrorLogger = (log: ErrorLog) => Promise<void>;

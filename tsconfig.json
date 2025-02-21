@@ -1,23 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "lib": [
-      "dom", 
-      "dom.iterable", 
-      "esnext",
-      "es2020"
-    ],
-    "types": ["@emotion/react/types/css-prop", "@types/stylis"],
-    "paths": {
-      "@/*": ["./src/*"],
+    "target": "ES2020",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["node", "vitest/globals"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "useDefineForClassFields": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -29,32 +20,18 @@
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
       "@utils/*": ["src/utils/*"],
-      "@theme/*": ["src/theme/*"]
-    },
-    "removeComments": true,
-    "sourceMap": true,
-    "declaration": false,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strictNullChecks": true,
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ]
+      "@store/*": ["src/store/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@services/*": ["src/services/*"],
+      "@types/*": ["src/types/*"]
+    }
   },
-  "include": [
-    "src/**/*.ts", 
-    "src/**/*.tsx",
-    "src/**/*.d.ts",
-    "src/theme/theme.d.ts"
-  ],
+  "include": ["src"],
   "exclude": [
     "node_modules",
-    "build",
     "dist",
     "**/*.spec.ts",
-    "**/*.test.ts",
-    "**/*.spec.tsx",
-    "**/*.test.tsx"
-  ]
+    "**/*.test.ts"
+  ],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,63 +1,45 @@
-import { useState, useEffect } from 'react';
-import { Typography, TypographyVariant, Box, SxProps, Theme } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { format, formatDistance } from 'date-fns';
+import { FC } from 'react';
+import { Typography, Box, type SxProps, type Theme } from '@mui/material';
+import { format as formatDate } from 'date-fns';
 import { faIR } from 'date-fns/locale';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 interface DateTimeProps {
   date: Date;
   format?: string;
   showIcon?: boolean;
   showTimeAgo?: boolean;
-  variant?: TypographyVariant;
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1' | 'subtitle2' | 'body1' | 'body2';
   sx?: SxProps<Theme>;
-  updateInterval?: number;
 }
 
-const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-
-// تابع تبدیل اعداد انگلیسی به فارسی
-const toPersianNumber = (str: string): string => {
-  return str.replace(/\d/g, (d) => persianDigits[parseInt(d)]);
-};
-
-export const DateTime = ({
+export const DateTime: FC<DateTimeProps> = ({
   date,
-  format: dateFormat = 'yyyy/MM/dd',
+  format = 'yyyy/MM/dd HH:mm:ss',
   showIcon = false,
   showTimeAgo = false,
   variant = 'body1',
-  sx,
-  updateInterval = 60000
-}: DateTimeProps) => {
-  const [, setUpdate] = useState(0);
-
-  useEffect(() => {
-    if (showTimeAgo && updateInterval > 0) {
-      const timer = setInterval(() => {
-        setUpdate(prev => prev + 1);
-      }, updateInterval);
-
-      return () => clearInterval(timer);
-    }
-  }, [showTimeAgo, updateInterval]);
-
-  const formattedDate = toPersianNumber(format(date, dateFormat, { locale: faIR }));
-  const timeAgo = showTimeAgo
-    ? formatDistance(date, new Date(), { addSuffix: true, locale: faIR })
-    : null;
+  sx
+}) => {
+  const formattedDate = formatDate(date, format, { locale: faIR });
+  
+  const timeAgo = (date: Date): string => {
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (seconds < 60) return 'همین الان';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} دقیقه پیش`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} ساعت پیش`;
+    return `${Math.floor(seconds / 86400)} روز پیش`;
+  };
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ...sx }}>
-      {showIcon && <AccessTimeIcon color="inherit" fontSize="small" />}
-      <Typography variant={variant} component="span">
+      {showIcon && <AccessTimeIcon fontSize="small" />}
+      <Typography variant={variant}>
         {formattedDate}
+        {showTimeAgo && ` (${timeAgo(date)})`}
       </Typography>
-      {timeAgo && (
-        <Typography variant={variant} component="span" sx={{ opacity: 0.8 }}>
-          ({timeAgo})
-        </Typography>
-      )}
     </Box>
   );
 };

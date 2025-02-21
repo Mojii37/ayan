@@ -3,7 +3,10 @@ export type UserRole = 'admin' | 'user' | 'guest';
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
-  token: string | null;
+  tokens: {
+    accessToken: string | null;
+    refreshToken: string | null;
+  } | null;
   loading: boolean;
   error: string | null;
   refreshToken: string | null;
@@ -14,14 +17,24 @@ export interface User {
   id: string;
   username: string;
   email: string; 
-  role: UserRole;
+  role: 'admin' | 'user';
   status: 'active' | 'inactive' | 'pending';
+  isActive: boolean;
   firstName: string;
   lastName: string;
   createdAt: string;
   avatar?: string;
   permissions?: string[];
   lastActivity?: Date;
+  updatedAt: string;
+}
+
+export interface LoginResponse {
+  user: User;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
 export interface LoginCredentials {

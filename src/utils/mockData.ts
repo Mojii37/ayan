@@ -13,6 +13,15 @@ import type {
   ChatTypes
 } from '../types/chat.types';
 import { ErrorSeverity, ErrorSource } from '../types/error.types';
+import type { User } from '../types/user.types';
+import type { ErrorLog } from '../types/error.types';
+
+
+
+export interface MockData {
+  user: User;
+  errorLog: ErrorLog;
+}
 
 // Constants
 export const CURRENT_USER = {

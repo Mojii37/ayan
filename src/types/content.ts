@@ -31,6 +31,7 @@ export interface Article {
   title: string;
   content: string;
   excerpt: string;
+  status: 'draft' | 'published' | 'archived';
   thumbnail?: string;
   category: string;
   createdAt: string;
@@ -64,5 +65,5 @@ export interface ArticleInput {
   excerpt: string;
   categoryId: string;
   tags: string[];
-  status: ContentStatus;
+  status: 'draft' | 'published' | 'archived';
 }

@@ -1,100 +1,123 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-
-// تعریف تایپ‌ها
-export interface Article {
-  id: string;
-  title: string;
-  content: string;
-  status: 'draft' | 'published' | 'archived';
-  createdAt: string;
-  updatedAt: string;
-  categoryId?: string;
-  authorId?: string;
-}
+import type { Article, ArticleInput, ArticlesResponse } from '@/types/content';
+import { articleService } from '@/services/articleService';
 
 interface ArticlesState {
   items: Article[];
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  error: string | null;
   selectedArticle: Article | null;
+  loading: boolean;
+  error: string | null;
+  total: number;
 }
 
-// وضعیت اولیه
 const initialState: ArticlesState = {
   items: [],
-  status: 'idle',
+  selectedArticle: null,
+  loading: false,
   error: null,
-  selectedArticle: null
+  total: 0
 };
 
 // Async Thunks
-export const fetchArticles = createAsyncThunk(
-  'articles/fetchArticles',
-  async () => {
-    const response = await fetch('/api/articles');
-    if (!response.ok) {
-      throw new Error('خطا در دریافت مقالات');
-    }
-    return response.json();
+export const fetchArticles = createAsyncThunk<
+  ArticlesResponse,
+  { page?: number; limit?: number } | undefined
+>('articles/fetchAll', async (filters) => {
+  return await articleService.getArticles(filters);
+});
+
+export const fetchArticle = createAsyncThunk<Article, string>(
+  'articles/fetchOne',
+  async (id) => {
+    return await articleService.getArticle(id);
   }
 );
 
-export const deleteArticle = createAsyncThunk(
-  'articles/deleteArticle',
-  async (id: string) => {
-    const response = await fetch(`/api/articles/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error('خطا در حذف مقاله');
-    }
+export const createArticle = createAsyncThunk<Article, ArticleInput>(
+  'articles/create',
+  async (data) => {
+    return await articleService.createArticle(data);
+  }
+);
+
+export const updateArticle = createAsyncThunk<
+  Article,
+  { id: string; data: Partial<ArticleInput> }
+>('articles/update', async ({ id, data }) => {
+  return await articleService.updateArticle(id, data);
+});
+
+export const deleteArticle = createAsyncThunk<string, string>(
+  'articles/delete',
+  async (id) => {
+    await articleService.removeArticle(id);
     return id;
   }
 );
 
-// Slice
 const articlesSlice = createSlice({
   name: 'articles',
   initialState,
   reducers: {
-    setSelectedArticle: (state, action: PayloadAction<Article | null>) => {
-      state.selectedArticle = action.payload;
-    },
-    clearArticles: (state) => {
-      state.items = [];
-      state.status = 'idle';
+    clearArticleState: (state) => {
+      state.selectedArticle = null;
       state.error = null;
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Articles
+      // Fetch All
       .addCase(fetchArticles.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(fetchArticles.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.items = action.payload;
+        state.loading = true;
         state.error = null;
       })
+      .addCase(fetchArticles.fulfilled, (state, action: PayloadAction<ArticlesResponse>) => {
+        state.items = action.payload.articles;
+        state.total = action.payload.total;
+        state.loading = false;
+      })
       .addCase(fetchArticles.rejected, (state, action) => {
-        state.status = 'failed';
+        state.loading = false;
         state.error = action.error.message ?? 'خطا در دریافت مقالات';
       })
-      // Delete Article
-      .addCase(deleteArticle.fulfilled, (state, action) => {
+      // Fetch One
+      .addCase(fetchArticle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchArticle.fulfilled, (state, action: PayloadAction<Article>) => {
+        state.selectedArticle = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchArticle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message ?? 'خطا در دریافت مقاله';
+      })
+      // Create
+      .addCase(createArticle.fulfilled, (state, action: PayloadAction<Article>) => {
+        state.items.unshift(action.payload);
+        state.total += 1;
+      })
+      // Update
+      .addCase(updateArticle.fulfilled, (state, action: PayloadAction<Article>) => {
+        const index = state.items.findIndex(item => item.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
+        if (state.selectedArticle?.id === action.payload.id) {
+          state.selectedArticle = action.payload;
+        }
+      })
+      // Delete
+      .addCase(deleteArticle.fulfilled, (state, action: PayloadAction<string>) => {
         state.items = state.items.filter(item => item.id !== action.payload);
+        state.total -= 1;
+        if (state.selectedArticle?.id === action.payload) {
+          state.selectedArticle = null;
+        }
       });
-  },
+  }
 });
 
-// Actions
-export const { setSelectedArticle, clearArticles } = articlesSlice.actions;
-
-// Selectors
-export const selectAllArticles = (state: { articles: ArticlesState }) => state.articles.items;
-export const selectArticleStatus = (state: { articles: ArticlesState }) => state.articles.status;
-export const selectArticleError = (state: { articles: ArticlesState }) => state.articles.error;
-export const selectSelectedArticle = (state: { articles: ArticlesState }) => state.articles.selectedArticle;
-
+export const { clearArticleState } = articlesSlice.actions;
 export default articlesSlice.reducer;
