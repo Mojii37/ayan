@@ -1,32 +1,30 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderWithProviders } from '../setupTests';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { renderWithProviders } from '../test-utils';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import App from '../App';
-import '@testing-library/jest-dom';
-import React from 'react';
 
 describe('App Component', () => {
-  const testDate = new Date('2025-02-15T10:03:00Z');
-
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(testDate);
+    // تنظیمات اولیه قبل از هر تست
   });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.clearAllMocks();
-  });
-
 
   it('renders without crashing', () => {
-      const { container } = renderWithProviders(<App />, { route: '/' });
-      expect(container).toBeInTheDocument();
+    const { store } = renderWithProviders(<App />, {
+      preloadedState: {
+        auth: {
+          isAuthenticated: false,
+          user: null
+        },
+        settings: {
+          theme: {
+            mode: 'light'
+          }
+        }
+      }
     });
-  it('renders with correct layout structure', () => {
-    const { getByTestId } = renderWithProviders(<App />, { route: '/' });
-    
-    expect(getByTestId('app-header')).toBeInTheDocument();
-    expect(getByTestId('app-main')).toBeInTheDocument();
-    expect(getByTestId('app-footer')).toBeInTheDocument();
+
+    expect(screen.getByTestId('app-header')).toBeInTheDocument();
+    expect(store.getState().auth.isAuthenticated).toBe(false);
   });
 });

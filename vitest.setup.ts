@@ -1,12 +1,17 @@
-import '@testing-library/jest-dom';
-import { vi, expect, afterEach, beforeEach } from 'vitest';
-import type { MockInstance } from 'vitest';
+import { afterEach, beforeEach, vi, expect } from 'vitest';
+import { cleanup } from '@testing-library/react';
 
-// شبیه‌سازی window.matchMedia
+// پاکسازی بعد از هر تست
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+// تنظیم matchMedia
 beforeEach(() => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation((query: string) => ({
+    value: vi.fn().mockImplementation(query => ({
       matches: false,
       media: query,
       onchange: null,
@@ -19,7 +24,7 @@ beforeEach(() => {
   });
 });
 
-// گسترش matcher های expect
+// تعریف matcher های سفارشی
 interface CustomMatchers<R = unknown> {
   toBeInTheDocument(): R;
 }
@@ -28,13 +33,12 @@ expect.extend({
   toBeInTheDocument(received) {
     const pass = received != null && received !== false;
     return {
-      message: () => `expected ${received} to be in the document`,
+      message: () => `expected ${received} ${pass ? 'not ' : ''}to be in the document`,
       pass,
     };
   },
 });
 
-// تعریف نوع برای matcher سفارشی
 declare module 'vitest' {
   interface Assertion<T = any> extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
