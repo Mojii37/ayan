@@ -8,8 +8,9 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { faIR } from 'date-fns/locale';
 import { CacheProvider } from '@emotion/react';
 import { store } from './store';
-import { theme, cacheRtl } from './theme';
+import { theme, rtlCache } from './theme';
 import App from './App';
+import './index.css';
 
 const globalStyles = {
   '*': {
@@ -86,7 +87,7 @@ if (!root) {
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <Provider store={store}>
-      <CacheProvider value={cacheRtl}>
+      <CacheProvider value={rtlCache}>
         <ThemeProvider theme={theme}>
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={faIR}>
             <CssBaseline />

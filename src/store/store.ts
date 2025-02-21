@@ -1,11 +1,11 @@
-import { configureStore } from '@reduxjs/toolkit';
-import type { Middleware } from '@reduxjs/toolkit';
+import { configureStore, Middleware } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import settingsReducer from './slices/settingsSlice';
 import cacheReducer from './slices/cacheSlice';
-import { apiMiddleware } from './middleware/apiMiddleware';
 import articlesReducer from './slices/articlesSlice';
+import { apiMiddleware } from './middleware/apiMiddleware';
+import { cacheMiddleware } from './middleware/cacheMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -13,7 +13,7 @@ export const store = configureStore({
     ui: uiReducer,
     settings: settingsReducer,
     cache: cacheReducer,
-    articles: articlesReducer  // اضافه کردن به reducers
+    articles: articlesReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -22,7 +22,8 @@ export const store = configureStore({
         ignoredActionPaths: ['payload.data'],
         ignoredPaths: ['cache'],
       },
-    }).concat(apiMiddleware as Middleware),  // اضافه کردن type casting
+    }).concat(apiMiddleware as Middleware, cacheMiddleware as Middleware),
+  devTools: process.env.NODE_ENV !== 'production',
 });
 
 export type RootState = ReturnType<typeof store.getState>;

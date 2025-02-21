@@ -1,23 +1,12 @@
 export type UserRole = 'admin' | 'user' | 'guest';
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: User | null;
-  tokens: {
-    accessToken: string | null;
-    refreshToken: string | null;
-  } | null;
-  loading: boolean;
-  error: string | null;
-  refreshToken: string | null;
-  lastLogin?: Date | string | null;
-}
 
 export interface User {
   id: string;
+  name: string;
   username: string;
   email: string; 
-  role: 'admin' | 'user';
+  role: 'user' | 'admin';
   status: 'active' | 'inactive' | 'pending';
   isActive: boolean;
   firstName: string;
@@ -27,6 +16,15 @@ export interface User {
   permissions?: string[];
   lastActivity?: Date;
   updatedAt: string;
+}
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: User | null;
+  token: string | null;
+  loading: boolean;
+  error: string | null;
+  refreshToken: string | null;
+  lastLogin: string | null;
 }
 
 export interface LoginResponse {

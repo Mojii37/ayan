@@ -1,5 +1,3 @@
-import type { AuthState } from '../types/auth.types';
-
 type ThemeMode = 'light' | 'dark';
 type SupportedLanguage = 'en' | 'fa' | 'ar';
 
@@ -45,6 +43,21 @@ export interface UIState {
   };
 }
 
+
+export interface AuthState {
+  isAuthenticated: boolean;
+}
+export interface AuthState {
+  user: unknown | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+}
+export interface CacheState {
+  [key: string]: CachedData;
+}
+
 export interface CachedData<T = unknown> {
   data: T;
   expiresAt: number;
@@ -52,14 +65,6 @@ export interface CachedData<T = unknown> {
   version?: string;
   tags?: string[];
 }
-
-export interface CacheState {
-  [key: string]: CachedData;
-  clearExpired: (maxAge?: number) => void;
-  getCachedItem<T = unknown>(key: string): CachedData<T> | undefined;
-  setCachedItem<T = unknown>(key: string, data: T, ttl?: number): void;
-}
-
 export type CacheKey = 
   | 'user-profile'
   | 'dashboard-data'

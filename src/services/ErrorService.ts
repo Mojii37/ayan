@@ -5,7 +5,7 @@ import type {
   ErrorStatus,
   StoredError,
   ErrorContext 
-} from '../types/error';
+} from '@/types/error';
 
 export class ErrorService {
   private static readonly API_URL = '/api/errors';

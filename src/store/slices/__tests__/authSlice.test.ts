@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import authReducer, { setCredentials, logout } from './authSlice';
+import authReducer, { setCredentials, logout } from '@/store/slices/authSlice';
 import type { AuthState } from '@/types/auth.types';
 import { MOCK_DATA } from '@/mocks/auth.mock';
 

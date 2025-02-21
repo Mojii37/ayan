@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
 export enum ErrorSeverity {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
   INFO = 'info',
   WARNING = 'warning',
   ERROR = 'error',
@@ -22,6 +25,7 @@ export enum ErrorSource {
 
 export enum ErrorStatus {
   NEW = 'new',
+  IN_PROGRESS = 'in_progress',
   PENDING = 'pending',
   RETRYING = 'retrying',
   RESOLVED = 'resolved',
@@ -49,10 +53,10 @@ export interface ErrorContext extends SystemInfo {
   sessionId?: string;
   route?: string;
   requestId?: string;
-  environment: 'development' | 'production' | 'test';
+  environment: 'string' | 'development' | 'production' | 'test';
   version?: string;
   customData?: Record<string, unknown>;
-  [key: string]: unknown;
+  [key: string]: any;
 }
 
 export interface ErrorLog {

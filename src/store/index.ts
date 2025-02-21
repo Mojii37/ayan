@@ -1,23 +1,22 @@
-import { configureStore } from '@reduxjs/toolkit';
-import type { Middleware } from '@reduxjs/toolkit';
+import { configureStore, Middleware } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
 import settingsReducer from './slices/settingsSlice';
 import cacheReducer from './slices/cacheSlice';
+import articlesReducer from './slices/articlesSlice';
 import { apiMiddleware } from './middleware/apiMiddleware';
 import { cacheMiddleware } from './middleware/cacheMiddleware';
 import type { RootState } from '../types/store.types';
-import articlesReducer from './slices/articlesSlice'; // اصلاح مسیر
 
 // Configure Store
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    articles: articlesReducer,  // اضافه کردن کاما
+    articles: articlesReducer,
     ui: uiReducer,
     settings: settingsReducer,
-    cache: cacheReducer
+    cache: cacheReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -26,15 +25,11 @@ export const store = configureStore({
         ignoredActionPaths: ['payload.data', 'meta.api'],
         ignoredPaths: ['cache.items', 'cache.service'],
       },
-    }).concat([apiMiddleware as Middleware, cacheMiddleware as Middleware]),
+    }).concat(apiMiddleware as Middleware, cacheMiddleware as Middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
 
-// Infer types from store
 export type AppDispatch = typeof store.dispatch;
-
-// Define typed hooks
-export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppDispatch: () => AppDispatch = useDispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
-
-export default store;
+export type RootState = ReturnType<typeof store.getState>;

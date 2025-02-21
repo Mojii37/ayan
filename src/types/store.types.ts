@@ -1,10 +1,9 @@
 import type { User } from './user';
 
-// تعریف تایپ‌های پایه
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type SupportedLanguage = 'en' | 'fa' | 'ar';
 
-// تعریف state های اصلی
 export interface AuthState {
   user: User | null;
   token: string | null;

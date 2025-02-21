@@ -1,15 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../store'; // مسیر این فایل را بر اساس ساختار پروژه خود تنظیم کنید
 
-export interface ThemeCustomColors {
+interface ThemeCustomColors {
   primary: string;
   secondary: string;
-  accent: string;
 }
 
-export interface SettingsState {
+interface SettingsState {
   theme: {
-    mode: 'light' | 'dark' | 'system';
+    mode: 'light' | 'dark';
     autoSwitch: boolean;
     customColors: ThemeCustomColors | null;
   };
@@ -144,17 +142,5 @@ export const {
   resetSettings,
   resetSection,
 } = settingsSlice.actions;
-
-// Selectors
-export const selectSettings = (state: RootState) => state.settings;
-export const selectTheme = (state: RootState) => state.settings.theme;
-export const selectThemeMode = (state: RootState) => state.settings.theme.mode;
-export const selectLanguage = (state: RootState) => state.settings.language;
-export const selectDirection = (state: RootState) => state.settings.language.direction;
-export const selectInterface = (state: RootState) => state.settings.interface;
-export const selectNotifications = (state: RootState) => state.settings.notifications;
-export const selectAccessibility = (state: RootState) => state.settings.accessibility;
-export const selectPrivacy = (state: RootState) => state.settings.privacy;
-export const selectCustomColors = (state: RootState) => state.settings.theme.customColors;
 
 export default settingsSlice.reducer;

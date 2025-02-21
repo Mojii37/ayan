@@ -12,6 +12,7 @@ const initialState: UIState = {
   currentTime: '2025-02-13 18:19:45'
 };
 
+
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
