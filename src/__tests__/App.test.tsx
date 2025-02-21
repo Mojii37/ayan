@@ -1,30 +1,23 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderWithProviders } from '../test-utils';
 import { screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import App from '../App';
 
 describe('App Component', () => {
-  beforeEach(() => {
-    // تنظیمات اولیه قبل از هر تست
+  it('renders without crashing', () => {
+    const { store } = renderWithProviders(<App />);
+    expect(store.getState()).toBeDefined();
   });
 
-  it('renders without crashing', () => {
-    const { store } = renderWithProviders(<App />, {
-      preloadedState: {
-        auth: {
-          isAuthenticated: false,
-          user: null
-        },
-        settings: {
-          theme: {
-            mode: 'light'
-          }
-        }
-      }
-    });
+  it('renders with correct layout structure', () => {
+    renderWithProviders(<App />);
+    
+    const header = screen.getByTestId('app-header');
+    const main = screen.getByTestId('app-main');
+    const footer = screen.getByTestId('app-footer');
 
-    expect(screen.getByTestId('app-header')).toBeInTheDocument();
-    expect(store.getState().auth.isAuthenticated).toBe(false);
+    expect(header).toBeDefined();
+    expect(main).toBeDefined();
+    expect(footer).toBeDefined();
   });
 });

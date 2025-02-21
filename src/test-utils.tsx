@@ -1,10 +1,9 @@
 import React from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { BrowserRouter } from 'react-router-dom';
-
-// Import reducers
+import { store } from './store';
+import type { RenderOptions } from '@testing-library/react';
 import authReducer from './store/slices/authSlice';
 import uiReducer from './store/slices/uiSlice';
 import settingsReducer from './store/slices/settingsSlice';
@@ -17,22 +16,33 @@ const rootReducer = {
   articles: articlesReducer,
 };
 
-export const setupStore = (preloadedState = {}) => {
-  return configureStore({
-    reducer: rootReducer,
-    preloadedState,
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({
-        serializableCheck: false,
-      }),
-  });
-};
+export function renderWithProviders(
+  ui: React.ReactElement,
+  {
+    preloadedState = {},
+    store = setupStore(preloadedState),
+    route = '/',
+    ...renderOptions
+  }: ExtendedRenderOptions = {}
+): ReturnType<typeof render> & { store: ReturnType<typeof setupStore> } {
+  window.history.pushState({}, 'Test page', route);
 
-interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  preloadedState?: Record<string, any>;
-  store?: ReturnType<typeof setupStore>;
-  route?: string;
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <Provider store={store}>
+        <BrowserRouter>{children}</BrowserRouter>
+      </Provider>
+    );
+  }
+
+  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
 }
+
+
+  interface ExtendedRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+    route?: string;
+  }
+  
 
 export function renderWithProviders(
   ui: React.ReactElement,
@@ -56,5 +66,4 @@ export function renderWithProviders(
   return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
 }
 
-// Re-export
 export * from '@testing-library/react';
